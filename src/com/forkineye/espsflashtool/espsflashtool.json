@@ -1,0 +1,30 @@
+{
+    "modes": [
+        {
+            "name": "Pixel (WS2811 / GECE)",
+            "description": "Pixel Mode",
+            "file": "pixel.bin"
+        },
+        {
+            "name": "Serial (DMX / Renard)",
+            "description": "Serial Mode",
+            "file": "serial.bin"
+        }
+    ],
+    
+    "devices": [
+        {
+            "name": "ESP01_1MB_128K",
+            "esptool": {
+                "reset": "none",
+                "baudrate": "115200",
+                "spiffsloc": "0xDB000"
+            },
+            "mkspiffs": {
+                "page": "128",
+                "block": "4096",
+                "size": "131072"
+            }
+        }
+    ]
+}
