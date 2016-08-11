@@ -24,6 +24,7 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 import static javax.swing.JOptionPane.showMessageDialog;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 
 /**
@@ -178,12 +179,16 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         initComponents();
         setLocationRelativeTo(null);
 
+        // Setup export dialog
+        dlgSave.setFileFilter(new FileNameExtensionFilter("Firmware Updates", "efu"));
+        dlgSave.setSelectedFile(new File ("espixelstick.efu"));
+        
         // Verify and Populate modes
         for (ESPSDeviceMode m : ftconfig.modes) {
             if (new File(fwPath + m.getFile()).isFile()) {
                 modelMode.addElement(m);
             } else {
-                showMessageDialog(null, "Firmware not found for mode " + mode.toString(), 
+                showMessageDialog(null, "Firmware not found for mode " + m.toString(), 
                         "Bad mode configuration", JOptionPane.ERROR_MESSAGE);
             }
         }
@@ -419,7 +424,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jSeparator1 = new javax.swing.JSeparator();
+        dlgSave = new javax.swing.JFileChooser();
         txtPassphrase = new javax.swing.JTextField();
         cboxMode = new javax.swing.JComboBox<>();
         txtDevID = new javax.swing.JTextField();
@@ -431,11 +436,24 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
         btnFlash = new javax.swing.JButton();
+        btnExport = new javax.swing.JButton();
+        jSplitPane1 = new javax.swing.JSplitPane();
+        pnlSystem = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         txtSystemOutput = new javax.swing.JTextArea();
+        jLabel7 = new javax.swing.JLabel();
+        pnlSerial = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         txtSerialOutput = new javax.swing.JTextArea();
         jLabel6 = new javax.swing.JLabel();
+
+        dlgSave.setDialogType(javax.swing.JFileChooser.SAVE_DIALOG);
+        dlgSave.setDialogTitle("Save Firmware Update");
+        dlgSave.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                dlgSaveActionPerformed(evt);
+            }
+        });
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("ESPixelStick Flash Tool");
@@ -480,10 +498,48 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
             }
         });
 
+        btnExport.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        btnExport.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/forkineye/espsflashtool/export.png"))); // NOI18N
+        btnExport.setText("Build EFU");
+        btnExport.setToolTipText("Builds an OTA update file");
+        btnExport.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnExportActionPerformed(evt);
+            }
+        });
+
+        jSplitPane1.setBorder(null);
+        jSplitPane1.setDividerLocation(200);
+        jSplitPane1.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
+
         txtSystemOutput.setEditable(false);
         txtSystemOutput.setColumns(20);
         txtSystemOutput.setRows(5);
         jScrollPane1.setViewportView(txtSystemOutput);
+
+        jLabel7.setText("Status");
+
+        javax.swing.GroupLayout pnlSystemLayout = new javax.swing.GroupLayout(pnlSystem);
+        pnlSystem.setLayout(pnlSystemLayout);
+        pnlSystemLayout.setHorizontalGroup(
+            pnlSystemLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 487, Short.MAX_VALUE)
+            .addGroup(pnlSystemLayout.createSequentialGroup()
+                .addComponent(jLabel7)
+                .addGap(0, 0, Short.MAX_VALUE))
+        );
+        pnlSystemLayout.setVerticalGroup(
+            pnlSystemLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlSystemLayout.createSequentialGroup()
+                .addComponent(jLabel7)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 180, Short.MAX_VALUE))
+        );
+
+        jSplitPane1.setTopComponent(pnlSystem);
+
+        pnlSerial.setAlignmentX(0.0F);
+        pnlSerial.setAlignmentY(0.0F);
 
         txtSerialOutput.setEditable(false);
         txtSerialOutput.setColumns(20);
@@ -492,6 +548,25 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
 
         jLabel6.setText("Serial Output");
 
+        javax.swing.GroupLayout pnlSerialLayout = new javax.swing.GroupLayout(pnlSerial);
+        pnlSerial.setLayout(pnlSerialLayout);
+        pnlSerialLayout.setHorizontalGroup(
+            pnlSerialLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane2)
+            .addGroup(pnlSerialLayout.createSequentialGroup()
+                .addComponent(jLabel6)
+                .addGap(0, 0, Short.MAX_VALUE))
+        );
+        pnlSerialLayout.setVerticalGroup(
+            pnlSerialLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(pnlSerialLayout.createSequentialGroup()
+                .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 167, Short.MAX_VALUE))
+        );
+
+        jSplitPane1.setBottomComponent(pnlSerial);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -499,7 +574,6 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel3)
@@ -511,14 +585,14 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(txtPassphrase)
                             .addComponent(txtSSID, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(cboxPort, 0, 416, Short.MAX_VALUE)
+                            .addComponent(cboxPort, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(cboxMode, javax.swing.GroupLayout.Alignment.TRAILING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(txtDevID, javax.swing.GroupLayout.Alignment.TRAILING)))
-                    .addComponent(btnFlash, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jSplitPane1)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel6)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(jScrollPane2))
+                        .addComponent(btnFlash, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnExport)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -545,13 +619,11 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
                     .addComponent(cboxPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel4))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btnFlash)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnFlash)
+                    .addComponent(btnExport))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 214, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel6)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 152, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jSplitPane1)
                 .addContainerGap())
         );
 
@@ -577,6 +649,21 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
             ftask.execute();
         }
     }//GEN-LAST:event_btnFlashActionPerformed
+
+    private void btnExportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExportActionPerformed
+        dlgSave.showSaveDialog(this);
+    }//GEN-LAST:event_btnExportActionPerformed
+
+    private void dlgSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dlgSaveActionPerformed
+        try {
+            // TODO add your handling code here:
+            UpdateBuilder.build(fwPath + mode.getFile(), fwPath + spiffsBin,
+                    dlgSave.getSelectedFile().getAbsolutePath());
+        } catch (IOException ex) {
+            showMessageDialog(null, "Failed to build firmware update\n" +
+                    ex.getMessage(), "Failed EFU Build", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_dlgSaveActionPerformed
 
     /**
      * @param args the command line arguments
@@ -614,18 +701,23 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnExport;
     private javax.swing.JButton btnFlash;
     private javax.swing.JComboBox<ESPSDeviceMode> cboxMode;
     private javax.swing.JComboBox<ESPSSerialPort> cboxPort;
+    private javax.swing.JFileChooser dlgSave;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JSeparator jSeparator1;
+    private javax.swing.JSplitPane jSplitPane1;
+    private javax.swing.JPanel pnlSerial;
+    private javax.swing.JPanel pnlSystem;
     private javax.swing.JTextField txtDevID;
     private javax.swing.JTextField txtPassphrase;
     private javax.swing.JTextField txtSSID;
