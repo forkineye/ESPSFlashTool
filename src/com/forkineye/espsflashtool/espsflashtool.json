@@ -21,7 +21,7 @@
                 "spiffsloc": "0xDB000"
             },
             "mkspiffs": {
-                "page": "128",
+                "page": "256",
                 "block": "4096",
                 "size": "131072"
             }

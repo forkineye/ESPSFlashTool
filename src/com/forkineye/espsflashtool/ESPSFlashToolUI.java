@@ -17,6 +17,7 @@ package com.forkineye.espsflashtool;
 import com.fazecast.jSerialComm.*;
 import com.google.gson.*;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.DefaultComboBoxModel;
@@ -155,30 +156,32 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     private FTDevice device;
     private ESPSSerialPort port;
     private ESPSDeviceMode mode;
+    private SerialPort lastPort;
     
     /**
      * Creates new form ESPSFlashToolUI
      */
     public ESPSFlashToolUI() {
-        // Netbeans init routine
-        initComponents();
-        setLocationRelativeTo(null);
-        
         // Detect OS and set binary paths
         if (!detectOS())
             showMessageDialog(null, "Failed to detect OS",
                     "OS Detection Failure", JOptionPane.ERROR_MESSAGE);            
         
-        // Read FT Config
+        // Read FT Config and set default device
         Gson gson = new Gson();
         InputStream in = getClass().getResourceAsStream("espsflashtool.json");
         BufferedReader reader = new BufferedReader(new InputStreamReader(in));
         ftconfig = gson.fromJson(reader, FTConfig.class);
+        device = ftconfig.devices.get(0);
+
+        // Netbeans init routine
+        initComponents();
+        setLocationRelativeTo(null);
 
         // Verify and Populate modes
-        for (ESPSDeviceMode mode : ftconfig.modes) {
-            if (new File(fwPath + mode.getFile()).isFile()) {
-                modelMode.addElement(mode);
+        for (ESPSDeviceMode m : ftconfig.modes) {
+            if (new File(fwPath + m.getFile()).isFile()) {
+                modelMode.addElement(m);
             } else {
                 showMessageDialog(null, "Firmware not found for mode " + mode.toString(), 
                         "Bad mode configuration", JOptionPane.ERROR_MESSAGE);
@@ -186,8 +189,8 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         }
                
         // Populate serial ports
-        for (SerialPort port : SerialPort.getCommPorts())
-            modelPort.addElement(new ESPSSerialPort(port));
+        for (SerialPort serial : SerialPort.getCommPorts())
+            modelPort.addElement(new ESPSSerialPort(serial));
         
         // Deserialize config.json
         try {
@@ -202,15 +205,13 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         txtSSID.setText(config.network.ssid);
         txtPassphrase.setText(config.network.passphrase);
         txtDevID.setText(config.device.id);
-        
-        // Set default device
-        device = ftconfig.devices.get(0);
     }
 
     private boolean serializeConfig() {
         boolean retval = true;
         config.network.ssid = txtSSID.getText();
         config.network.passphrase = txtPassphrase.getText();
+        config.device.id = txtDevID.getText();
 
         try (Writer fw = new FileWriter(spiffsPath + configJson)) {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -251,6 +252,42 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         return retval;
     }
     
+    private void monitor(SerialPort serial) {
+        serial.setComPortParameters(Integer.parseInt(device.esptool.baudrate),
+                8, 0, 1);
+
+        txtSerialOutput.setText(""); 
+        if (!serial.openPort()) {
+            txtSerialOutput.append("Failed to open serial port " + serial.getSystemPortName());
+        } else {
+            serial.addDataListener(new SerialPortDataListener() {
+                @Override
+                public int getListeningEvents() { return SerialPort.LISTENING_EVENT_DATA_AVAILABLE; }
+
+                @Override
+                public void serialEvent(SerialPortEvent event) {
+                    if (event.getEventType() != SerialPort.LISTENING_EVENT_DATA_AVAILABLE)
+                        return;
+                    byte[] data = new byte[serial.bytesAvailable()];
+                    serial.readBytes(data, data.length);
+                    txtSerialOutput.append(new String(data, StandardCharsets.US_ASCII));
+                }
+            });
+        }
+    }
+
+    private void disableInterface() {
+        cboxPort.setEnabled(false);
+        cboxMode.setEnabled(false);
+        btnFlash.setEnabled(false);
+    }
+
+    private void enableInterface() {
+        cboxPort.setEnabled(true);
+        cboxMode.setEnabled(true);
+        btnFlash.setEnabled(true);
+    }
+
     private List<String> cmdEsptool() {
         List<String> list = new ArrayList<>();
         
@@ -267,6 +304,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         list.add(fwPath + mode.getFile());
         list.add("-ca");
         list.add(device.esptool.spiffsloc);
+        list.add("-cf");
         list.add(fwPath + spiffsBin);
         
         return list;
@@ -293,7 +331,9 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         private int state;
         private int status;
 
-        public FlashTask() {}
+        public FlashTask() {
+            port.getPort().closePort();
+        }
         
         private int exec(List<String> command) {
             try {
@@ -326,7 +366,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
             String command = "";
             
             // Build SPIFFS
-            txtOutput.setText(null);
+            txtSystemOutput.setText(null);
             publish("-= Building SPIFFS Image =-");
             for (String opt : cmdMkspiffs())
                 command = (command + " " + opt);
@@ -356,15 +396,17 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         @Override
         protected void process(java.util.List<String> messages) {
             for (String message : messages)
-                txtOutput.append(message + "\n");
+                txtSystemOutput.append(message + "\n");
         }
 
         @Override
         protected void done() {
+            monitor(port.getPort());
             if (status == 0)
-                txtOutput.append("\n-= Programming Complete =-");
+                txtSystemOutput.append("\n-= Programming Complete =-");
             else
-                txtOutput.append("\n*** PROGRAMMING FAILED ***");
+                txtSystemOutput.append("\n*** PROGRAMMING FAILED ***");
+            enableInterface();
         }
     }
     
@@ -377,6 +419,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jSeparator1 = new javax.swing.JSeparator();
         txtPassphrase = new javax.swing.JTextField();
         cboxMode = new javax.swing.JComboBox<>();
         txtDevID = new javax.swing.JTextField();
@@ -389,7 +432,10 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         btnFlash = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
-        txtOutput = new javax.swing.JTextArea();
+        txtSystemOutput = new javax.swing.JTextArea();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        txtSerialOutput = new javax.swing.JTextArea();
+        jLabel6 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("ESPixelStick Flash Tool");
@@ -434,10 +480,17 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
             }
         });
 
-        txtOutput.setEditable(false);
-        txtOutput.setColumns(20);
-        txtOutput.setRows(5);
-        jScrollPane1.setViewportView(txtOutput);
+        txtSystemOutput.setEditable(false);
+        txtSystemOutput.setColumns(20);
+        txtSystemOutput.setRows(5);
+        jScrollPane1.setViewportView(txtSystemOutput);
+
+        txtSerialOutput.setEditable(false);
+        txtSerialOutput.setColumns(20);
+        txtSerialOutput.setRows(5);
+        jScrollPane2.setViewportView(txtSerialOutput);
+
+        jLabel6.setText("Serial Output");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -446,7 +499,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel3)
@@ -458,10 +511,14 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(txtPassphrase)
                             .addComponent(txtSSID, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(cboxPort, 0, 418, Short.MAX_VALUE)
+                            .addComponent(cboxPort, 0, 416, Short.MAX_VALUE)
                             .addComponent(cboxMode, javax.swing.GroupLayout.Alignment.TRAILING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(txtDevID, javax.swing.GroupLayout.Alignment.TRAILING)))
-                    .addComponent(btnFlash, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(btnFlash, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel6)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(jScrollPane2))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -490,7 +547,11 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnFlash)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 212, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 214, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel6)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 152, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
 
@@ -499,6 +560,10 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
 
     private void cboxPortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboxPortActionPerformed
         port = cboxPort.getItemAt(cboxPort.getSelectedIndex());
+        if (lastPort != null)
+            lastPort.closePort();
+        lastPort = port.getPort();
+        monitor(port.getPort());
     }//GEN-LAST:event_cboxPortActionPerformed
 
     private void cboxModeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboxModeActionPerformed
@@ -507,6 +572,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
 
     private void btnFlashActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFlashActionPerformed
         if (serializeConfig()) {
+            disableInterface();
             ftask = new FlashTask();
             ftask.execute();
         }
@@ -556,10 +622,14 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JSeparator jSeparator1;
     private javax.swing.JTextField txtDevID;
-    private javax.swing.JTextArea txtOutput;
     private javax.swing.JTextField txtPassphrase;
     private javax.swing.JTextField txtSSID;
+    private javax.swing.JTextArea txtSerialOutput;
+    private javax.swing.JTextArea txtSystemOutput;
     // End of variables declaration//GEN-END:variables
 }
