@@ -33,10 +33,10 @@ public class UpdateBuilder {
     private static final int VERSION = 1;
     
     private enum RecordType {
-        SKETCH_IMAGE(0x00),
-        SPIFFS_IMAGE(0x01),
-        EEPROM_IMAGE(0x02),
-        SPIFFS_FILE(0x03);
+        NULL_RECORD(0x00),
+        SKETCH_IMAGE(0x01),
+        SPIFFS_IMAGE(0x02),
+        EEPROM_IMAGE(0x03);
         
         private final int value;
         
@@ -62,8 +62,6 @@ public class UpdateBuilder {
             {n # of records}
             16bit record type
             32bit size
-            16bit filename size
-            xxbit filename (variable)
             {x bytes of data}
         */
                 
@@ -74,16 +72,14 @@ public class UpdateBuilder {
         // Write Sketch Image
         int szSketch = (int)new File(sketch).length();
         dsTarget.writeShort(RecordType.SKETCH_IMAGE.getValue());
-        dsTarget.write(szSketch);
-        dsTarget.write(0);
+        dsTarget.writeInt(szSketch);
         for (int i = 0; i < szSketch; i++)
             dsTarget.write(dsSketch.read());
         
         // Write SPIFFS Image
         int szSpiffs = (int)new File(spiffs).length();
         dsTarget.writeShort(RecordType.SPIFFS_IMAGE.getValue());
-        dsTarget.write(szSpiffs);
-        dsTarget.write(0);
+        dsTarget.writeInt(szSpiffs);
         for (int i = 0; i < szSpiffs; i++)
             dsTarget.write(dsSpiffs.read());
 

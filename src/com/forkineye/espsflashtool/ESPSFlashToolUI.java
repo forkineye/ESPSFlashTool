@@ -25,6 +25,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 import static javax.swing.JOptionPane.showMessageDialog;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import static javax.swing.JOptionPane.showMessageDialog;
 
 
 /**
@@ -147,7 +148,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     private final String spiffsPath = "spiffs/";        // Path for SPIFFS
     private final String spiffsBin = "spiffs.bin";      // SPIFFS Image
     private final String configJson = "config.json";    // ESPixelStick config.json
-    private FlashTask ftask;                            // SwingWorker task to build and flash
+    private ImageTask ftask;                            // SwingWorker task to build and flash
     
     private String esptool;     // esptool binary to use with path
     private String mkspiffs;    // mkspiffs binary to use with path
@@ -180,7 +181,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         setLocationRelativeTo(null);
 
         // Setup export dialog
-        dlgSave.setFileFilter(new FileNameExtensionFilter("Firmware Updates", "efu"));
+        dlgSave.setFileFilter(new FileNameExtensionFilter("ESPS Firmware Update", "efu"));
         dlgSave.setSelectedFile(new File ("espixelstick.efu"));
         
         // Verify and Populate modes
@@ -332,12 +333,14 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         return list;        
     }
     
-    private class FlashTask extends SwingWorker<Integer, String> {
+    private class ImageTask extends SwingWorker<Integer, String> {
         private int state;
         private int status;
+        private boolean flash;
 
-        public FlashTask() {
+        public ImageTask(boolean flash) {
             port.getPort().closePort();
+            this.flash = flash;
         }
         
         private int exec(List<String> command) {
@@ -382,16 +385,18 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
                         "Failed mkspiffs", JOptionPane.ERROR_MESSAGE);
             } else {
                 // Flash the images
-                publish("\n-= Programming ESP8266 =-");
-                command = "";
-                for (String opt : cmdEsptool())
-                    command = (command + " " + opt);
-                publish(command);
-                status = exec(cmdEsptool());
-                if (status != 0) {
-                    showMessageDialog(null, "Failed to program the ESP8266.\n" +
-                            "Verify your device is properly connected and in programming mode.",
-                            "Failed esptool", JOptionPane.ERROR_MESSAGE);
+                if (flash) {
+                    publish("\n-= Programming ESP8266 =-");
+                    command = "";
+                    for (String opt : cmdEsptool())
+                        command = (command + " " + opt);
+                    publish(command);
+                    status = exec(cmdEsptool());
+                    if (status != 0) {
+                        showMessageDialog(null, "Failed to program the ESP8266.\n" +
+                                "Verify your device is properly connected and in programming mode.",
+                                "Failed esptool", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             }
                     
@@ -408,9 +413,15 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         protected void done() {
             monitor(port.getPort());
             if (status == 0)
-                txtSystemOutput.append("\n-= Programming Complete =-");
+                if (flash)
+                    txtSystemOutput.append("\n-= Programming Complete =-");
+                else
+                    txtSystemOutput.append("\n-= Image Creation Complete =-");
             else
-                txtSystemOutput.append("\n*** PROGRAMMING FAILED ***");
+                if (flash)
+                    txtSystemOutput.append("\n*** PROGRAMMING FAILED ***");
+                else
+                    txtSystemOutput.append("\n*** IMAGE CREATION FAILED ***");
             enableInterface();
         }
     }
@@ -645,7 +656,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     private void btnFlashActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFlashActionPerformed
         if (serializeConfig()) {
             disableInterface();
-            ftask = new FlashTask();
+            ftask = new ImageTask(true);
             ftask.execute();
         }
     }//GEN-LAST:event_btnFlashActionPerformed
@@ -656,9 +667,14 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
 
     private void dlgSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dlgSaveActionPerformed
         try {
-            // TODO add your handling code here:
-            UpdateBuilder.build(fwPath + mode.getFile(), fwPath + spiffsBin,
-                    dlgSave.getSelectedFile().getAbsolutePath());
+            if (serializeConfig()) {
+                disableInterface();
+                ftask = new ImageTask(false);
+                ftask.execute();
+
+                UpdateBuilder.build(fwPath + mode.getFile(), fwPath + spiffsBin,
+                        dlgSave.getSelectedFile().getAbsolutePath());
+            }
         } catch (IOException ex) {
             showMessageDialog(null, "Failed to build firmware update\n" +
                     ex.getMessage(), "Failed EFU Build", JOptionPane.ERROR_MESSAGE);
