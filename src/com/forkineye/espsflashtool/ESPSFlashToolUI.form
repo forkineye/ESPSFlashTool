@@ -7,9 +7,6 @@
         <Property name="dialogType" type="int" value="1"/>
         <Property name="dialogTitle" type="java.lang.String" value="Save Firmware Update"/>
       </Properties>
-      <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="dlgSaveActionPerformed"/>
-      </Events>
     </Component>
   </NonVisualComponents>
   <Properties>

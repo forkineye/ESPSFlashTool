@@ -21,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 import static javax.swing.JOptionPane.showMessageDialog;
@@ -460,11 +461,6 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
 
         dlgSave.setDialogType(javax.swing.JFileChooser.SAVE_DIALOG);
         dlgSave.setDialogTitle("Save Firmware Update");
-        dlgSave.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                dlgSaveActionPerformed(evt);
-            }
-        });
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("ESPixelStick Flash Tool");
@@ -662,24 +658,22 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     }//GEN-LAST:event_btnFlashActionPerformed
 
     private void btnExportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExportActionPerformed
-        dlgSave.showSaveDialog(this);
-    }//GEN-LAST:event_btnExportActionPerformed
+        if (dlgSave.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            try {
+                if (serializeConfig()) {
+                    disableInterface();
+                    ftask = new ImageTask(false);
+                    ftask.execute();
 
-    private void dlgSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dlgSaveActionPerformed
-        try {
-            if (serializeConfig()) {
-                disableInterface();
-                ftask = new ImageTask(false);
-                ftask.execute();
-
-                UpdateBuilder.build(fwPath + mode.getFile(), fwPath + spiffsBin,
-                        dlgSave.getSelectedFile().getAbsolutePath());
+                    UpdateBuilder.build(fwPath + mode.getFile(), fwPath + spiffsBin,
+                            dlgSave.getSelectedFile().getAbsolutePath());
+                }
+            } catch (IOException ex) {
+                showMessageDialog(null, "Failed to build firmware update\n" +
+                        ex.getMessage(), "Failed EFU Build", JOptionPane.ERROR_MESSAGE);
             }
-        } catch (IOException ex) {
-            showMessageDialog(null, "Failed to build firmware update\n" +
-                    ex.getMessage(), "Failed EFU Build", JOptionPane.ERROR_MESSAGE);
         }
-    }//GEN-LAST:event_dlgSaveActionPerformed
+    }//GEN-LAST:event_btnExportActionPerformed
 
     /**
      * @param args the command line arguments
