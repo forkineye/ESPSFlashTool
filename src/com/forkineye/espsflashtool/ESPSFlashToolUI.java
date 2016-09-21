@@ -20,6 +20,9 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -160,15 +163,21 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     private ESPSSerialPort port;
     private ESPSDeviceMode mode;
     private SerialPort lastPort;
+    private boolean isWindows;
     
     /**
      * Creates new form ESPSFlashToolUI
      */
     public ESPSFlashToolUI() {
         // Detect OS and set binary paths
-        if (!detectOS())
-            showMessageDialog(null, "Failed to detect OS",
-                    "OS Detection Failure", JOptionPane.ERROR_MESSAGE);            
+        isWindows = false;
+        try {
+            if (!detectOS())
+                showMessageDialog(null, "Failed to detect OS",            
+                        "OS Detection Failure", JOptionPane.ERROR_MESSAGE);
+        } catch (IOException ex) {
+            Logger.getLogger(ESPSFlashToolUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
         
         // Read FT Config and set default device
         Gson gson = new Gson();
@@ -232,7 +241,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         return retval;
     }
     
-    private boolean detectOS() {
+    private boolean detectOS() throws IOException {
         boolean retval = true;
         String os = System.getProperty("os.name").toLowerCase();
         String arch = System.getProperty("os.arch").toLowerCase();
@@ -242,16 +251,23 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
             System.out.println("Detected Windows");
             esptool = execPath + "win/esptool.exe";
             mkspiffs = execPath + "win/mkspiffs.exe";
+            isWindows = true;
         } else if (os.contains("mac")) {
             System.out.println("Detected Mac");
             esptool = execPath + "osx/esptool";
             mkspiffs = execPath + "osx/mkspiffs";
+            java.lang.Runtime.getRuntime().exec("chmod 550 " + esptool);
+            java.lang.Runtime.getRuntime().exec("chmod 550 " + mkspiffs);
         } else if (os.contains("linux") && arch.contains("32")) {
             esptool = execPath + "linux32/esptool";
             mkspiffs = execPath + "linux32/mkspiffs";
+            java.lang.Runtime.getRuntime().exec("chmod 550 " + esptool);
+            java.lang.Runtime.getRuntime().exec("chmod 550 " + mkspiffs);
         } else if (os.contains("linux") && arch.contains("64")) {
             esptool = execPath + "linux64/esptool";
             mkspiffs = execPath + "linux64/mkspiffs";
+            java.lang.Runtime.getRuntime().exec("chmod 550 " + esptool);
+            java.lang.Runtime.getRuntime().exec("chmod 550 " + mkspiffs);            
         } else {
             retval = false;
         }
@@ -304,7 +320,10 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         list.add("-cb");
         list.add(device.esptool.baudrate);
         list.add("-cp");
-        list.add(port.getPort().getSystemPortName());
+        if (isWindows)
+            list.add(port.getPort().getSystemPortName());
+        else
+            list.add("/dev/" + port.getPort().getSystemPortName());
         list.add("-ca");
         list.add("0x000000");
         list.add("-cf");
@@ -664,7 +683,14 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
                     disableInterface();
                     ftask = new ImageTask(false);
                     ftask.execute();
-
+                    
+                    // Block until SPIFFS is built
+                    try {
+                        ftask.get();
+                    } catch (InterruptedException | ExecutionException ex) {
+                        Logger.getLogger(ESPSFlashToolUI.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    
                     UpdateBuilder.build(fwPath + mode.getFile(), fwPath + spiffsBin,
                             dlgSave.getSelectedFile().getAbsolutePath());
                 }
