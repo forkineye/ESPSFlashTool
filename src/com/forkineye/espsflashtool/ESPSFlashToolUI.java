@@ -241,6 +241,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         boolean retval = true;
         config.network.ssid = txtSSID.getText();
         config.network.passphrase = txtPassphrase.getText();
+        config.network.hostname = txtHostname.getText();
         config.device.id = txtDevID.getText();
 
         try (Writer fw = new FileWriter(spiffsPath + configJson)) {
@@ -294,9 +295,8 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         if (serial == null)
             return;
 
-        serial.closePort();
         serial.setComPortParameters(Integer.parseInt(device.esptool.baudrate),
-                8, 0, 1);
+                8, SerialPort.ONE_STOP_BIT, SerialPort.NO_PARITY);
 
         txtSerialOutput.setText(""); 
         if (!serial.openPort()) {
