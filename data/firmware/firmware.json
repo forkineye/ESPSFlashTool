@@ -3,12 +3,14 @@
         {
             "name": "Pixel (WS2811 / GECE)",
             "description": "Pixel Mode",
-            "file": "pixel-2.0-1m_128k.bin"
+            "version": "3.0-dev1 (20170624)",
+            "file": "pixel-3.0dev1-1m_128k.bin"
         },
         {
             "name": "Serial (DMX / Renard)",
             "description": "Serial Mode",
-            "file": "serial-2.0-1m_128k.bin"
+            "version": "3.0-dev1 (20170624)",
+            "file": "serial-3.0dev1-1m_128k.bin"
         }
     ],
     
