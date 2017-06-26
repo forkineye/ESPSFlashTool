@@ -291,6 +291,9 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     }
     
     private void monitor() {
+        if (port == null)
+            return;
+        
         SerialPort serial = port.getPort();
         if (serial == null)
             return;
@@ -388,9 +391,11 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         private boolean flash;
 
         public ImageTask(boolean flash) {
-            SerialPort serial = port.getPort();
-            if (serial != null)
-                port.getPort().closePort();
+            if (port != null) {
+                SerialPort serial = port.getPort();
+                if (serial != null)
+                    port.getPort().closePort();
+            }
             this.flash = flash;
         }
         
@@ -715,6 +720,8 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
 
     private void cboxPortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboxPortActionPerformed
         port = cboxPort.getItemAt(cboxPort.getSelectedIndex());
+        if (port == null)
+            return;
         if (lastPort != null)
             lastPort.closePort();
         lastPort = port.getPort();
