@@ -55,7 +55,7 @@ class ESPSDeviceMode {
     public String getFile() {
         return file;
     }
-    
+
     @Override
     public String toString() {
         return name + " v" + version;
@@ -86,9 +86,9 @@ class ESPSConfig {
         String  ssid;
         String  passphrase;
         String  hostname;
-        int[]   ip = new int[4];
-        int[]   netmask = new int[4];
-        int[]   gateway = new int[4];
+        String  ip;
+        String  netmask;
+        String  gateway;
         boolean dhcp;           // Use DHCP
         boolean ap_fallback;    // Fallback to AP if fail to associate
     }
@@ -125,6 +125,7 @@ class ESPSConfig {
 // Device JSON Config
 class FTDevice {
     String name;
+    String espplatformname;
     Esptool esptool;
     Mkspiffs mkspiffs;
     
@@ -132,12 +133,18 @@ class FTDevice {
         String reset;
         String baudrate;
         String spiffsloc;
+        String binloc;
     }
     
     class Mkspiffs {
         String page;
         String block;
         String size;
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 }
 
@@ -148,8 +155,9 @@ class FTConfig {
 }
 
 public class ESPSFlashToolUI extends javax.swing.JFrame {
-    private final DefaultComboBoxModel<ESPSDeviceMode> modelMode = new DefaultComboBoxModel<>();
-    private final DefaultComboBoxModel<ESPSSerialPort> modelPort = new DefaultComboBoxModel<>();
+    private final DefaultComboBoxModel<ESPSDeviceMode> modelMode   = new DefaultComboBoxModel<>();
+    private final DefaultComboBoxModel<FTDevice>       modelDevice = new DefaultComboBoxModel<>();
+    private final DefaultComboBoxModel<ESPSSerialPort> modelPort   = new DefaultComboBoxModel<>();
     private final String fwPath = "firmware/";          // Path for firmware bins
     private final String execPath = "bin/";             // Path for executables
     private final String spiffsPath = "spiffs/";        // Path for SPIFFS
@@ -160,6 +168,8 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     /* Validation Patterns */
     private static final String HOSTNAME_PATTERN = "^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])$";
     
+    private String OsName;
+    private String EspPlatformName;
     private String esptool;     // esptool binary to use with path
     private String mkspiffs;    // mkspiffs binary to use with path
     
@@ -215,6 +225,11 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
             }
         }
                
+        // Verify and Populate platforms
+        for (FTDevice d : ftconfig.devices) {
+                modelDevice.addElement(d);
+        }
+               
         // Populate serial ports
         for (SerialPort serial : SerialPort.getCommPorts())
             modelPort.addElement(new ESPSSerialPort(serial));
@@ -264,25 +279,15 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         
         if (os.contains("win")) {
             System.out.println("Detected Windows");
-            esptool = execPath + "win/esptool.exe";
-            mkspiffs = execPath + "win/mkspiffs.exe";
+            OsName = "win/";
             isWindows = true;
         } else if (os.contains("mac")) {
             System.out.println("Detected Mac");
-            esptool = execPath + "osx/esptool";
-            mkspiffs = execPath + "osx/mkspiffs";
-            java.lang.Runtime.getRuntime().exec("chmod 550 " + esptool);
-            java.lang.Runtime.getRuntime().exec("chmod 550 " + mkspiffs);
+            OsName = "osx/";
         } else if (os.contains("linux") && arch.contains("32")) {
-            esptool = execPath + "linux32/esptool";
-            mkspiffs = execPath + "linux32/mkspiffs";
-            java.lang.Runtime.getRuntime().exec("chmod 550 " + esptool);
-            java.lang.Runtime.getRuntime().exec("chmod 550 " + mkspiffs);
+            OsName = "linux32/";
         } else if (os.contains("linux") && arch.contains("64")) {
-            esptool = execPath + "linux64/esptool";
-            mkspiffs = execPath + "linux64/mkspiffs";
-            java.lang.Runtime.getRuntime().exec("chmod 550 " + esptool);
-            java.lang.Runtime.getRuntime().exec("chmod 550 " + mkspiffs);            
+            OsName = "linux64/";
         } else {
             retval = false;
         }
@@ -290,13 +295,41 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         return retval;
     }
     
+    private void SetToolPaths()
+    {
+        EspPlatformName = device.espplatformname + "/";
+        mkspiffs = execPath + EspPlatformName + OsName + "mkspiffs";
+
+        if(isWindows)
+        {
+            esptool  = execPath + EspPlatformName + OsName + "esptool.py.exe";
+        }
+        else
+        {
+            esptool  = execPath + EspPlatformName + OsName + "esptool.py";
+            try
+            {
+                java.lang.Runtime.getRuntime().exec("chmod 550 " + esptool);
+                java.lang.Runtime.getRuntime().exec("chmod 550 " + mkspiffs);
+            }
+            catch( IOException ex) {}
+        }
+    }
+
+    // execPath + EspPlatformPath +
     private void monitor() {
         if (port == null)
+        {
+            txtSerialOutput.append("No Port Defined");
             return;
-        
+        }
+
         SerialPort serial = port.getPort();
         if (serial == null)
+        {
+            txtSerialOutput.append("Desired Serial Port Not Found");
             return;
+        }
 
         serial.setComPortParameters(Integer.parseInt(device.esptool.baudrate),
                 8, SerialPort.ONE_STOP_BIT, SerialPort.NO_PARITY);
@@ -324,12 +357,14 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     private void disableInterface() {
         cboxPort.setEnabled(false);
         cboxMode.setEnabled(false);
+        cboxDevice.setEnabled(false);
         disableButtons();
     }
 
     private void enableInterface() {
         cboxPort.setEnabled(true);
         cboxMode.setEnabled(true);
+        cboxDevice.setEnabled(true);
         enableButtons();
     }
     
@@ -343,28 +378,57 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         btnExport.setEnabled(true);
     }
 
-    private List<String> cmdEsptool() {
+    private List<String> cmdEsptoolErase()
+    {
         List<String> list = new ArrayList<>();
         
+        if(!isWindows)
+        {
+            list.add("python");
+        }
         list.add(esptool);
-        list.add("-cd");
-        list.add(device.esptool.reset);
-        list.add("-cb");
+        list.add("--chip");
+        list.add("auto");
+        list.add("--baud");
         list.add(device.esptool.baudrate);
-        list.add("-cp");
+        list.add("--port");
         if (isWindows)
             list.add(port.getPort().getSystemPortName());
         else
             list.add("/dev/" + port.getPort().getSystemPortName());
-        list.add("-ca");
-        list.add("0x000000");
-        list.add("-cf");
-        list.add(fwPath + mode.getFile());
-        list.add("-ca");
+
+        list.add("erase_region");
         list.add(device.esptool.spiffsloc);
-        list.add("-cf");
-        list.add(fwPath + spiffsBin);
+        list.add(device.mkspiffs.size);
+
+        return list;
+    }
+
+    private List<String> cmdEsptool() {
+        List<String> list = new ArrayList<>();
         
+        if(!isWindows)
+        {
+            list.add("python");
+        }
+        list.add(esptool);
+        list.add("--chip");
+        list.add("auto");
+        list.add("--baud");
+        list.add(device.esptool.baudrate);
+        list.add("--port");
+        if (isWindows)
+            list.add(port.getPort().getSystemPortName());
+        else
+            list.add("/dev/" + port.getPort().getSystemPortName());
+
+        list.add("write_flash");
+        list.add(device.esptool.binloc);
+        list.add(fwPath + mode.getFile());
+
+        list.add(device.esptool.spiffsloc);
+        list.add(fwPath + spiffsBin);
+
         return list;
     }
     
@@ -401,6 +465,8 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         
         private int exec(List<String> command) {
             try {
+                // ProcessBuilder pb = new ProcessBuilder("python", resolvePythonScriptPath("hello.py"));
+
                 ProcessBuilder pb = new ProcessBuilder(command);
                 pb.redirectErrorStream(true);
                 Process p = pb.start();
@@ -413,6 +479,8 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
 
                 if (!isCancelled())
                     state = p.waitFor();
+
+                publish("Done");
 
                 p.getInputStream().close();
                 p.getOutputStream().close();
@@ -429,6 +497,8 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         protected Integer doInBackground() {
             String command = "";
             
+            SetToolPaths();
+
             // Build SPIFFS
             txtSystemOutput.setText(null);
             publish("-= Building SPIFFS Image =-");
@@ -436,13 +506,23 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
                 command = (command + " " + opt);
             publish(command);
             status = exec(cmdMkspiffs());
-            if (status != 0) {
+            if (status != 0)
+            {
                 showMessageDialog(null, "Failed to make SPIFFS Image",
                         "Failed mkspiffs", JOptionPane.ERROR_MESSAGE);
-            } else {
+            } 
+            else
+            {
                 // Flash the images
                 if (flash) {
                     publish("\n-= Programming ESP8266 =-");
+
+                    command = "";
+                    for (String opt : cmdEsptoolErase())
+                        command = (command + " " + opt);
+                    publish(command);
+                    status = exec(cmdEsptoolErase());
+
                     command = "";
                     for (String opt : cmdEsptool())
                         command = (command + " " + opt);
@@ -450,8 +530,8 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
                     status = exec(cmdEsptool());
                     if (status != 0) {
                         showMessageDialog(null, "Failed to program the ESP8266.\n" +
-                                "Verify your device is properly connected and in programming mode.",
-                                "Failed esptool", JOptionPane.ERROR_MESSAGE);
+                                                "Verify your device is properly connected and in programming mode.",
+                                                "Failed esptool", JOptionPane.ERROR_MESSAGE);
                     }
                 }
             }
@@ -494,10 +574,12 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         dlgSave = new javax.swing.JFileChooser();
         txtPassphrase = new javax.swing.JTextField();
         cboxMode = new javax.swing.JComboBox<>();
+        cboxDevice = new javax.swing.JComboBox<>();
         txtDevID = new javax.swing.JTextField();
         jLabel5 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
         cboxPort = new javax.swing.JComboBox<>();
+        jLabelcboxDevice = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
         txtSSID = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
@@ -531,6 +613,13 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
             }
         });
 
+        cboxDevice.setModel(modelDevice);
+        cboxDevice.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cboxDeviceActionPerformed(evt);
+            }
+        });
+
         txtDevID.setToolTipText("Plain text name to help you identify this device");
 
         jLabel5.setText("Device ID");
@@ -545,6 +634,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         });
 
         jLabel3.setText("Firmware");
+        jLabelcboxDevice.setText("Platform");
 
         txtSSID.setToolTipText("Enter your AP SSID");
 
@@ -659,6 +749,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
                     .addGroup(layout.createSequentialGroup()
                         .addGap(6, 6, 6)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabelcboxDevice)
                             .addComponent(jLabel3)
                             .addComponent(jLabel4)
                             .addComponent(jLabel5))))
@@ -666,6 +757,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                     .addComponent(cboxPort, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(cboxMode, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(cboxDevice, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(txtDevID)
                     .addComponent(txtHostname)
                     .addComponent(txtPassphrase)
@@ -702,6 +794,9 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cboxMode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel3))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(cboxDevice, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabelcboxDevice))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cboxPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -731,6 +826,10 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     private void cboxModeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboxModeActionPerformed
         mode = cboxMode.getItemAt(cboxMode.getSelectedIndex());
     }//GEN-LAST:event_cboxModeActionPerformed
+
+    private void cboxDeviceActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboxDeviceActionPerformed
+        device = cboxDevice.getItemAt(cboxDevice.getSelectedIndex());
+    }//GEN-LAST:cboxDevice
 
     private void btnFlashActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFlashActionPerformed
         if (serializeConfig()) {
@@ -814,6 +913,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     private javax.swing.JButton btnExport;
     private javax.swing.JButton btnFlash;
     private javax.swing.JComboBox<ESPSDeviceMode> cboxMode;
+    private javax.swing.JComboBox<FTDevice> cboxDevice;
     private javax.swing.JComboBox<ESPSSerialPort> cboxPort;
     private javax.swing.JFileChooser dlgSave;
     private javax.swing.JLabel jLabel1;
@@ -824,6 +924,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabelcboxDevice;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JSplitPane jSplitPane1;
