@@ -1,0 +1,28 @@
+{
+    "modes": [
+        {
+            "name": "Dummy",
+            "description": "Dummy Mode",
+            "version": "X",
+            "file": "dummy.bin"
+        }
+    ],
+
+    "devices": [
+        {
+            "name": "ESPixelStick V1 / V2 / V3",
+            "espplatformname": "ESP8266",
+            "esptool": {
+                "reset": "nodemcu",
+                "baudrate": "115200",
+                "spiffsloc": "0xDB000",
+                "binloc": "0x0"
+            },
+            "mkspiffs": {
+                "page": "256",
+                "block": "4096",
+                "size": "131072"
+            }
+        }
+    ]
+}
