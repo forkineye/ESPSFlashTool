@@ -48,6 +48,7 @@
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace min="-2" pref="6" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="1" attributes="0">
+                          <Component id="jLabelcboxDevice" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel3" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel4" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel5" min="-2" max="-2" attributes="0"/>
@@ -57,6 +58,7 @@
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="2" attributes="0">
                   <Component id="cboxPort" alignment="2" max="32767" attributes="0"/>
+                  <Component id="cboxDevice" alignment="2" max="32767" attributes="0"/>
                   <Component id="cboxMode" alignment="2" max="32767" attributes="0"/>
                   <Component id="txtDevID" alignment="2" max="32767" attributes="0"/>
                   <Component id="txtHostname" alignment="2" max="32767" attributes="0"/>
@@ -105,6 +107,11 @@
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="cboxDevice" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="jLabelcboxDevice" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
+              <EmptySpace max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="cboxPort" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="jLabel4" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
@@ -127,22 +134,35 @@
       </Properties>
     </Component>
     <Component class="javax.swing.JComboBox" name="cboxMode">
-      <Properties>
-        <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
-          <Connection code="modelMode" type="code"/>
-        </Property>
-      </Properties>
-      <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cboxModeActionPerformed"/>
-      </Events>
-      <AuxValues>
-        <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;ESPSDeviceMode&gt;"/>
-      </AuxValues>
+        <Properties>
+            <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                <Connection code="modelMode" type="code"/>
+            </Property>
+        </Properties>
+        <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cboxModeActionPerformed"/>
+        </Events>
+        <AuxValues>
+            <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;ESPSDeviceMode&gt;"/>
+        </AuxValues>
+    </Component>
+    <Component class="javax.swing.JComboBox" name="cboxDevice">
+        <Properties>
+            <Property name="device" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                <Connection code="modelDevice" type="code"/>
+            </Property>
+        </Properties>
+        <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cboxDeviceActionPerformed"/>
+        </Events>
+        <AuxValues>
+            <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;FTDevice&gt;"/>
+        </AuxValues>
     </Component>
     <Component class="javax.swing.JTextField" name="txtDevID">
-      <Properties>
-        <Property name="toolTipText" type="java.lang.String" value="Plain text name to help you identify this device"/>
-      </Properties>
+        <Properties>
+            <Property name="toolTipText" type="java.lang.String" value="Plain text name to help you identify this device"/>
+        </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="jLabel5">
       <Properties>
@@ -172,7 +192,12 @@
         <Property name="text" type="java.lang.String" value="Firmware"/>
       </Properties>
     </Component>
-    <Component class="javax.swing.JTextField" name="txtSSID">
+    <Component class="javax.swing.JLabel" name="jLabelcboxDevice">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Firmware"/>
+      </Properties>
+    </Component>
+      <Component class="javax.swing.JTextField" name="txtSSID">
       <Properties>
         <Property name="toolTipText" type="java.lang.String" value="Enter your AP SSID"/>
       </Properties>
