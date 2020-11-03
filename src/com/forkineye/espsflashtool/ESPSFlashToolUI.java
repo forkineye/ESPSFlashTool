@@ -51,7 +51,7 @@ class ESPSDeviceMode {
         this.version = version;
         this.file = file;
     }
-    
+
     public String getFile() {
         return file;
     }
@@ -69,7 +69,7 @@ class ESPSSerialPort {
     public ESPSSerialPort(SerialPort port) {
         this.port = port;
     }
-    
+
     public SerialPort getPort() {
         return port;
     }
@@ -77,7 +77,7 @@ class ESPSSerialPort {
     @Override
     public String toString() {
         return (port.getSystemPortName() + " - " + port.getDescriptivePortName());
-    }    
+    }
 }
 
 // ESPixelStick JSON Config
@@ -86,9 +86,9 @@ class ESPSConfig {
         String  ssid;
         String  passphrase;
         String  hostname;
-        String  ip;
-        String  netmask;
-        String  gateway;
+        int[]   ip = new int[4];
+        int[]   netmask = new int[4];
+        int[]   gateway = new int[4];
         boolean dhcp;           // Use DHCP
         boolean ap_fallback;    // Fallback to AP if fail to associate
     }
@@ -109,12 +109,12 @@ class ESPSConfig {
         int     pixel_color;    // Pixel color order
         boolean gamma;          // Use gamma map?
     }
-    
+
     class Serial {
         int serial_type;    // Serial type
         int baudrate;       // Baudrate
     }
-    
+
     Network network;
     Device device;
     E131 e131;
@@ -128,14 +128,14 @@ class FTDevice {
     String espplatformname;
     Esptool esptool;
     Mkspiffs mkspiffs;
-    
+
     class Esptool {
         String reset;
         String baudrate;
         String spiffsloc;
         String binloc;
     }
-    
+
     class Mkspiffs {
         String page;
         String block;
@@ -167,12 +167,12 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
 
     /* Validation Patterns */
     private static final String HOSTNAME_PATTERN = "^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])$";
-    
+
     private String OsName;
     private String EspPlatformName;
     private String esptool;     // esptool binary to use with path
     private String mkspiffs;    // mkspiffs binary to use with path
-    
+
     private ESPSConfig config;
     private FTConfig ftconfig;
     private FTDevice device;
@@ -180,7 +180,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     private ESPSDeviceMode mode;
     private SerialPort lastPort;
     private boolean isWindows;
-    
+
     /**
      * Creates new form ESPSFlashToolUI
      */
@@ -189,24 +189,24 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         isWindows = false;
         try {
             if (!detectOS())
-                showMessageDialog(null, "Failed to detect OS",            
+                showMessageDialog(null, "Failed to detect OS",
                         "OS Detection Failure", JOptionPane.ERROR_MESSAGE);
         } catch (IOException ex) {
             Logger.getLogger(ESPSFlashToolUI.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         // Read FT Config and set default device
         Gson gson = new Gson();
         try {
             ftconfig = gson.fromJson(
                     new FileReader(fwPath + "firmware.json"), FTConfig.class);
         } catch (FileNotFoundException ex) {
-            showMessageDialog(null, "Unable to find firmware configuration file", 
+            showMessageDialog(null, "Unable to find firmware configuration file",
                     "Failed deserialize", JOptionPane.ERROR_MESSAGE);
             System.exit(0);
         }
         device = ftconfig.devices.get(0);
-        
+
         // Netbeans init routine
         initComponents();
         setLocationRelativeTo(null);
@@ -214,32 +214,32 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         // Setup export dialog
         dlgSave.setFileFilter(new FileNameExtensionFilter("ESPS Firmware Update", "efu"));
         dlgSave.setSelectedFile(new File ("espixelstick.efu"));
-        
+
         // Verify and Populate modes
         for (ESPSDeviceMode m : ftconfig.modes) {
             if (new File(fwPath + m.getFile()).isFile()) {
                 modelMode.addElement(m);
             } else {
-                showMessageDialog(null, "Firmware not found for mode " + m.toString(), 
+                showMessageDialog(null, "Firmware not found for mode " + m.toString(),
                         "Bad Firmware Configuration", JOptionPane.ERROR_MESSAGE);
             }
         }
-               
+
         // Verify and Populate platforms
         for (FTDevice d : ftconfig.devices) {
                 modelDevice.addElement(d);
         }
-               
+
         // Populate serial ports
         for (SerialPort serial : SerialPort.getCommPorts())
             modelPort.addElement(new ESPSSerialPort(serial));
-        
+
         // Deserialize config.json
         try {
             config = gson.fromJson(
                     new FileReader(spiffsPath + configJson), ESPSConfig.class);
         } catch (FileNotFoundException ex) {
-            showMessageDialog(null, "Unable to find ESPixelStick Configuration file", 
+            showMessageDialog(null, "Unable to find ESPixelStick Configuration file",
                     "Failed deserialize", JOptionPane.ERROR_MESSAGE);
         }
 
@@ -247,7 +247,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         txtSSID.setText(config.network.ssid);
         txtPassphrase.setText(config.network.passphrase);
         txtDevID.setText(config.device.id);
-        
+
         // Start serial monitor
         monitor();
     }
@@ -263,20 +263,20 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
             Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
             gson.toJson(config, fw);
         } catch (IOException ex) {
-            showMessageDialog(null, "Failed to save " + configJson, 
+            showMessageDialog(null, "Failed to save " + configJson,
                     "Failed serialize", JOptionPane.ERROR_MESSAGE);
             retval = false;
         }
-        
+
         return retval;
     }
-    
+
     private boolean detectOS() throws IOException {
         boolean retval = true;
         String os = System.getProperty("os.name").toLowerCase();
         String arch = System.getProperty("os.arch").toLowerCase();
         System.out.println("OS: " + os + " / " + arch);
-        
+
         if (os.contains("win")) {
             System.out.println("Detected Windows");
             OsName = "win/";
@@ -291,10 +291,10 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         } else {
             retval = false;
         }
-        
+
         return retval;
     }
-    
+
     private void SetToolPaths()
     {
         EspPlatformName = device.espplatformname + "/";
@@ -334,7 +334,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         serial.setComPortParameters(Integer.parseInt(device.esptool.baudrate),
                 8, SerialPort.ONE_STOP_BIT, SerialPort.NO_PARITY);
 
-        txtSerialOutput.setText(""); 
+        txtSerialOutput.setText("");
         if (!serial.openPort()) {
             txtSerialOutput.append("Failed to open serial port " + serial.getSystemPortName());
         } else {
@@ -367,7 +367,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         cboxDevice.setEnabled(true);
         enableButtons();
     }
-    
+
     private void disableButtons() {
         btnFlash.setEnabled(false);
         btnExport.setEnabled(false);
@@ -381,7 +381,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     private List<String> cmdEsptoolErase()
     {
         List<String> list = new ArrayList<>();
-        
+
         if(!isWindows)
         {
             list.add("python");
@@ -406,7 +406,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
 
     private List<String> cmdEsptool() {
         List<String> list = new ArrayList<>();
-        
+
         if(!isWindows)
         {
             list.add("python");
@@ -431,10 +431,10 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
 
         return list;
     }
-    
+
     private List<String> cmdMkspiffs() {
         List<String> list = new ArrayList<>();
-        
+
         list.add(mkspiffs);
         list.add("-c");
         list.add(spiffsPath);
@@ -445,10 +445,10 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         list.add("-s");
         list.add(device.mkspiffs.size);
         list.add(fwPath + spiffsBin);
-        
-        return list;        
+
+        return list;
     }
-    
+
     private class ImageTask extends SwingWorker<Integer, String> {
         private int state;
         private int status;
@@ -462,7 +462,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
             }
             this.flash = flash;
         }
-        
+
         private int exec(List<String> command) {
             try {
                 // ProcessBuilder pb = new ProcessBuilder("python", resolvePythonScriptPath("hello.py"));
@@ -473,7 +473,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
                 String s;
                 BufferedReader stdout = new BufferedReader(
                         new InputStreamReader(p.getInputStream()));
-                
+
                 while ((s = stdout.readLine()) != null && !isCancelled())
                     publish(s);
 
@@ -492,11 +492,11 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
                 return -1;
             }
         }
-        
+
         @Override
         protected Integer doInBackground() {
             String command = "";
-            
+
             SetToolPaths();
 
             // Build SPIFFS
@@ -510,7 +510,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
             {
                 showMessageDialog(null, "Failed to make SPIFFS Image",
                         "Failed mkspiffs", JOptionPane.ERROR_MESSAGE);
-            } 
+            }
             else
             {
                 // Flash the images
@@ -535,10 +535,10 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
                     }
                 }
             }
-                    
+
             return state;
         }
-        
+
         @Override
         protected void process(java.util.List<String> messages) {
             for (String message : messages)
@@ -561,7 +561,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
             enableInterface();
         }
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -846,14 +846,14 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
                     disableInterface();
                     ftask = new ImageTask(false);
                     ftask.execute();
-                    
+
                     // Block until SPIFFS is built
                     try {
                         ftask.get();
                     } catch (InterruptedException | ExecutionException ex) {
                         Logger.getLogger(ESPSFlashToolUI.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    
+
                     UpdateBuilder.build(fwPath + mode.getFile(), fwPath + spiffsBin,
                             dlgSave.getSelectedFile().getAbsolutePath());
                 }
@@ -881,7 +881,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
