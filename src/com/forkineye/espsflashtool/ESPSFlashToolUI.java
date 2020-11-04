@@ -414,7 +414,11 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
             list.add(port.getPort().getSystemPortName());
         else
             list.add("/dev/" + port.getPort().getSystemPortName());
-
+        
+        list.add("--before");
+        list.add("default_reset");
+        list.add("--after");
+        list.add("hard_reset");
         list.add("write_flash");
         list.add(device.esptool.binloc);
         list.add(fwPath + mode.getFile());
