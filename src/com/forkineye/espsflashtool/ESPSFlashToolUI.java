@@ -172,6 +172,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     private String EspPlatformName;
     private String esptool;     // esptool binary to use with path
     private String mkspiffs;    // mkspiffs binary to use with path
+    private String python;      // python binary to use
     
     private ESPSConfig config;
     private FTConfig ftconfig;
@@ -279,11 +280,11 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         
         if (os.contains("win")) {
             System.out.println("Detected Windows");
-            OsName = "win/";
+            OsName = "win32/";
             isWindows = true;
         } else if (os.contains("mac")) {
             System.out.println("Detected Mac");
-            OsName = "osx/";
+            OsName = "macos/";
         } else if (os.contains("linux") && arch.contains("32")) {
             OsName = "linux32/";
         } else if (os.contains("linux") && arch.contains("64")) {
@@ -298,15 +299,13 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     private void SetToolPaths()
     {
         EspPlatformName = device.espplatformname + "/";
-        mkspiffs = execPath + EspPlatformName + OsName + "mkspiffs";
-
-        if(isWindows)
-        {
-            esptool  = execPath + EspPlatformName + OsName + "esptool.py.exe";
-        }
-        else
-        {
-            esptool  = execPath + EspPlatformName + OsName + "esptool.py";
+        mkspiffs = execPath + OsName + EspPlatformName + "mkspiffs";
+        esptool  = execPath + "upload.py";
+        
+        if(isWindows) {
+            python = execPath + OsName + "python3/python";
+        } else {
+            python = "python";
             try
             {
                 java.lang.Runtime.getRuntime().exec("chmod 550 " + esptool);
@@ -382,10 +381,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     {
         List<String> list = new ArrayList<>();
         
-        if(!isWindows)
-        {
-            list.add("python");
-        }
+        list.add(python);
         list.add(esptool);
         list.add("--chip");
         list.add("auto");
@@ -407,10 +403,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     private List<String> cmdEsptool() {
         List<String> list = new ArrayList<>();
         
-        if(!isWindows)
-        {
-            list.add("python");
-        }
+        list.add(python);
         list.add(esptool);
         list.add("--chip");
         list.add("auto");
@@ -827,9 +820,9 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         mode = cboxMode.getItemAt(cboxMode.getSelectedIndex());
     }//GEN-LAST:event_cboxModeActionPerformed
 
-    private void cboxDeviceActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboxDeviceActionPerformed
+    private void cboxDeviceActionPerformed(java.awt.event.ActionEvent evt) {                                           
         device = cboxDevice.getItemAt(cboxDevice.getSelectedIndex());
-    }//GEN-LAST:cboxDevice
+    }                     
 
     private void btnFlashActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFlashActionPerformed
         if (serializeConfig()) {

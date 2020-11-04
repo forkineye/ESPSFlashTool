@@ -1,0 +1,65 @@
+{
+    "modes": [
+        {
+            "name": "Dummy ESP8266",
+            "description": "Dummy Description for ESP8266",
+            "version": "X",
+            "file": "dummy-esp8266.bin"
+        },
+        {
+            "name": "Dummy ESP32",
+            "description": "Dummy Description for ESP32",
+            "version": "X",
+            "file": "dummy-esp32.bin"
+        }
+    ],
+
+    "devices": [
+        {
+            "name": "ESP01_1MB_128K",
+            "espplatformname": "esp8266",
+            "esptool": {
+                "reset": "none",
+                "baudrate": "115200",
+                "spiffsloc": "0xDB000",
+                "binloc": "0x0"
+            },
+            "mkspiffs": {
+                "page": "256",
+                "block": "4096",
+                "size": "131072"
+            }
+        },
+        {
+            "name": "ESP01_LoLin_D1_Mini_4MB_1MB",
+            "espplatformname": "esp8266",
+            "esptool": {
+                "reset": "nodemcu",
+                "baudrate": "115200",
+                "spiffsloc": "0x200000",
+                "binloc": "0x0"
+            },
+            "mkspiffs": {
+                "page": "256",
+                "block": "8192",
+                "size": "1048576"
+            }
+        },
+        {
+            "name": "ESP32_LoLin_16MB_1.5M",
+            "espplatformname": "esp32",
+            "esptool": {
+                "reset": "ck",
+                "baudrate": "115200",
+                "spiffsloc": "0x290000",
+                "binloc": "0x10000"
+
+            },
+            "mkspiffs": {
+                "page": "256",
+                "block": "4096",
+                "size": "1507328"
+            }
+        }
+    ]
+}
