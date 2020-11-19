@@ -127,16 +127,16 @@ class FTDevice {
     String name;
     String espplatformname;
     Esptool esptool;
-    Mkspiffs mkspiffs;
+    Mkfilesystem filesystem;
     
     class Esptool {
         String reset;
         String baudrate;
-        String spiffsloc;
+        String fsloc;
         String binloc;
     }
     
-    class Mkspiffs {
+    class Mkfilesystem {
         String page;
         String block;
         String size;
@@ -158,10 +158,10 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     private final DefaultComboBoxModel<ESPSDeviceMode> modelMode   = new DefaultComboBoxModel<>();
     private final DefaultComboBoxModel<FTDevice>       modelDevice = new DefaultComboBoxModel<>();
     private final DefaultComboBoxModel<ESPSSerialPort> modelPort   = new DefaultComboBoxModel<>();
-    private final String fwPath = "firmware/";          // Path for firmware bins
+    private final String fwPath = "firmware/";          // Path for firmware binaries
     private final String execPath = "bin/";             // Path for executables
-    private final String spiffsPath = "spiffs/";        // Path for SPIFFS
-    private final String spiffsBin = "spiffs.bin";      // SPIFFS Image
+    private final String fsPath = "fs/";                // Path for filesystem
+    private final String fsBin = "filesystem.bin";      // Filesystem Image
     private final String configJson = "config.json";    // ESPixelStick config.json
     private ImageTask ftask;                            // SwingWorker task to build and flash
 
@@ -170,9 +170,9 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     
     private String OsName;
     private String EspPlatformName;
-    private String esptool;     // esptool binary to use with path
-    private String mkspiffs;    // mkspiffs binary to use with path
-    private String python;      // python binary to use
+    private String esptool;      // esptool binary to use with path
+    private String mkfilesystem; // filesystem binary to use with path
+    private String python;       // python binary to use
     
     private ESPSConfig config;
     private FTConfig ftconfig;
@@ -237,8 +237,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         
         // Deserialize config.json
         try {
-            config = gson.fromJson(
-                    new FileReader(spiffsPath + configJson), ESPSConfig.class);
+            config = gson.fromJson(new FileReader(fsPath + configJson), ESPSConfig.class);
         } catch (FileNotFoundException ex) {
             showMessageDialog(null, "Unable to find ESPixelStick Configuration file", 
                     "Failed deserialize", JOptionPane.ERROR_MESSAGE);
@@ -247,6 +246,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         // Populate config
         txtSSID.setText(config.network.ssid);
         txtPassphrase.setText(config.network.passphrase);
+        txtHostname.setText(config.network.hostname);
         txtDevID.setText(config.device.id);
         
         // Start serial monitor
@@ -260,7 +260,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         config.network.hostname = txtHostname.getText();
         config.device.id = txtDevID.getText();
 
-        try (Writer fw = new FileWriter(spiffsPath + configJson)) {
+        try (Writer fw = new FileWriter(fsPath + configJson)) {
             Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
             gson.toJson(config, fw);
         } catch (IOException ex) {
@@ -285,8 +285,6 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         } else if (os.contains("mac")) {
             System.out.println("Detected Mac");
             OsName = "macos/";
-        } else if (os.contains("linux") && arch.contains("32")) {
-            OsName = "linux32/";
         } else if (os.contains("linux") && arch.contains("64")) {
             OsName = "linux64/";
         } else {
@@ -299,7 +297,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     private void SetToolPaths()
     {
         EspPlatformName = device.espplatformname + "/";
-        mkspiffs = execPath + OsName + EspPlatformName + "mkspiffs";
+        mkfilesystem = execPath + OsName + "mklittlefs";
         esptool  = execPath + "upload.py";
         
         if(isWindows) {
@@ -309,7 +307,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
             try
             {
                 java.lang.Runtime.getRuntime().exec("chmod 550 " + esptool);
-                java.lang.Runtime.getRuntime().exec("chmod 550 " + mkspiffs);
+                java.lang.Runtime.getRuntime().exec("chmod 550 " + mkfilesystem);
             }
             catch( IOException ex) {}
         }
@@ -394,8 +392,8 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
             list.add("/dev/" + port.getPort().getSystemPortName());
 
         list.add("erase_region");
-        list.add(device.esptool.spiffsloc);
-        list.add(device.mkspiffs.size);
+        list.add(device.esptool.fsloc);
+        list.add(device.filesystem.size);
 
         return list;
     }
@@ -423,25 +421,25 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         list.add(device.esptool.binloc);
         list.add(fwPath + mode.getFile());
 
-        list.add(device.esptool.spiffsloc);
-        list.add(fwPath + spiffsBin);
+        list.add(device.esptool.fsloc);
+        list.add(fwPath + fsBin);
 
         return list;
     }
     
-    private List<String> cmdMkspiffs() {
+    private List<String> cmdMkfilesystem() {
         List<String> list = new ArrayList<>();
         
-        list.add(mkspiffs);
+        list.add(mkfilesystem);
         list.add("-c");
-        list.add(spiffsPath);
+        list.add(fsPath);
         list.add("-p");
-        list.add(device.mkspiffs.page);
+        list.add(device.filesystem.page);
         list.add("-b");
-        list.add(device.mkspiffs.block);
+        list.add(device.filesystem.block);
         list.add("-s");
-        list.add(device.mkspiffs.size);
-        list.add(fwPath + spiffsBin);
+        list.add(device.filesystem.size);
+        list.add(fwPath + fsBin);
         
         return list;        
     }
@@ -496,23 +494,23 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
             
             SetToolPaths();
 
-            // Build SPIFFS
+            // Build Filesystem
             txtSystemOutput.setText(null);
-            publish("-= Building SPIFFS Image =-");
-            for (String opt : cmdMkspiffs())
+            publish("-= Building Filesystem Image =-");
+            for (String opt : cmdMkfilesystem())
                 command = (command + " " + opt);
             publish(command);
-            status = exec(cmdMkspiffs());
+            status = exec(cmdMkfilesystem());
             if (status != 0)
             {
-                showMessageDialog(null, "Failed to make SPIFFS Image",
-                        "Failed mkspiffs", JOptionPane.ERROR_MESSAGE);
+                showMessageDialog(null, "Failed to make Filesytem Image",
+                        "Failed mkfilesystem", JOptionPane.ERROR_MESSAGE);
             } 
             else
             {
                 // Flash the images
                 if (flash) {
-                    publish("\n-= Programming ESP8266 =-");
+                    publish("\n-= Programming ESP =-");
 
                     command = "";
                     for (String opt : cmdEsptoolErase())
@@ -526,7 +524,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
                     publish(command);
                     status = exec(cmdEsptool());
                     if (status != 0) {
-                        showMessageDialog(null, "Failed to program the ESP8266.\n" +
+                        showMessageDialog(null, "Failed to program the ESP.\n" +
                                                 "Verify your device is properly connected and in programming mode.",
                                                 "Failed esptool", JOptionPane.ERROR_MESSAGE);
                     }
@@ -844,14 +842,14 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
                     ftask = new ImageTask(false);
                     ftask.execute();
                     
-                    // Block until SPIFFS is built
+                    // Block until filesystem image is built
                     try {
                         ftask.get();
                     } catch (InterruptedException | ExecutionException ex) {
                         Logger.getLogger(ESPSFlashToolUI.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     
-                    UpdateBuilder.build(fwPath + mode.getFile(), fwPath + spiffsBin,
+                    UpdateBuilder.build(fwPath + mode.getFile(), fwPath + fsBin,
                             dlgSave.getSelectedFile().getAbsolutePath());
                 }
             } catch (IOException ex) {

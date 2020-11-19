@@ -30,3 +30,6 @@ hs_err_pid*
 
 # Include library jar files
 !lib/*.jar
+
+# Python cache
+__pycache__
