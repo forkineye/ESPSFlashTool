@@ -515,11 +515,14 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
                 if (flash) {
                     publish("\n-= Programming ESP8266 =-");
 
+                    // Breaks ESP-01 flashing
+                    /*
                     command = "";
                     for (String opt : cmdEsptoolErase())
                         command = (command + " " + opt);
                     publish(command);
                     status = exec(cmdEsptoolErase());
+                    */
 
                     command = "";
                     for (String opt : cmdEsptool())
