@@ -40,31 +40,6 @@ import javax.swing.UIManager;
  * @author sporadic
  */
 
-/*
-// Device Mode
-class ESPSDeviceMode {
-    private final String name;          // Name of the board for toString();
-    private final String description;   // Mode description
-    private final String version;       // Firmware version
-    private final String file;          // Name of firmware binary
-
-    public ESPSDeviceMode(String name, String description, String version, String file) {
-        this.name = name;
-        this.description = description;
-        this.version = version;
-        this.file = file;
-    }
-    
-    public String getFile() {
-        return file;
-    }
-
-    @Override
-    public String toString() {
-        return name + " v" + version;
-    }
-}
-*/
 // Board JSON Config
 class ESPSBoard {
     String name;
@@ -144,6 +119,10 @@ class ESPSSerialPort {
 
 // ESPixelStick JSON Config
 class ESPSConfig {
+    int cfgver;
+    Device device;
+    Network network;
+                
     class Network {
         String  ssid;
         String  passphrase;
@@ -152,36 +131,15 @@ class ESPSConfig {
         String  netmask;
         String  gateway;
         boolean dhcp;           // Use DHCP
+        int     sta_timeout;    // Timeout when connecting as a client (station)
         boolean ap_fallback;    // Fallback to AP if fail to associate
+        int     ap_timeout;     // How long to wait in AP mode with no connection before rebooting
+        boolean ap_reboot;      // Reboot on fail to connect
     }
 
     class Device {
         String  id;             // Device ID
     }
-
-    class E131 {
-        int     universe;       // Universe to listen for
-        int     channel_start;  // Channel to start listening at - 1 based
-        int     channel_count;  // Number of channels
-        boolean multicast;      // Enable multicast listener
-    }
-
-    class Pixel {
-        int     pixel_type;     // Pixel type
-        int     pixel_color;    // Pixel color order
-        boolean gamma;          // Use gamma map?
-    }
-    
-    class Serial {
-        int serial_type;    // Serial type
-        int baudrate;       // Baudrate
-    }
-    
-    Network network;
-    Device device;
-    E131 e131;
-    Pixel pixel;
-    Serial serial;
 }
 
 public class ESPSFlashToolUI extends javax.swing.JFrame {
