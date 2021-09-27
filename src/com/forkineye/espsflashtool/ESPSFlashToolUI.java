@@ -380,9 +380,9 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         else
             list.add("/dev/" + port.getPort().getSystemPortName());
 
-        list.add("erase_region");
-        list.add(board.filesystem.offset);
-        list.add(board.filesystem.size);
+        list.add("erase_flash");
+        // list.add(board.filesystem.offset);
+        // list.add(board.filesystem.size);
 
         return list;
     }
