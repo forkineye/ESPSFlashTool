@@ -120,6 +120,7 @@ class ESPSSerialPort {
 // ESPixelStick JSON Config
 class ESPSConfig {
     int cfgver;
+    boolean init = true;    // Flag to force config save / initialization
     Device device;
     Network network;
                 
