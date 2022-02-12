@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Shelby Merrick
+ * Copyright 2022 Shelby Merrick
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,327 +14,186 @@
  * limitations under the License.
  */
 package com.forkineye.espsflashtool;
+
 import com.fazecast.jSerialComm.*;
-import com.google.gson.*;
 import java.awt.Color;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import javax.swing.SwingWorker;
 import static javax.swing.JOptionPane.showMessageDialog;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import static javax.swing.JOptionPane.showMessageDialog;
-import javax.swing.UIManager;
 
+public class ESPSFlashToolUI extends javax.swing.JFrame
+{
 
-/**
- *
- * @author sporadic
- */
-
-// Board JSON Config
-class ESPSBoard {
-    String name;
-    String description;
-    String chip;
-    String appbin;
-    Esptool esptool;
-    ArrayList<Binfile> binfiles;
-    Filesystem filesystem;
-   
-    class Esptool {
-        String baudrate;
-        String options;
-        String flashcmd;
-    }
-    
-    class Binfile {
-        String name;
-        String offset;
-    }
-    class Filesystem {
-        String page;
-        String block;
-        String size;
-        String offset;
-    }
-    
-    // check if bin files exist
-    public boolean verify(String path) {
-        boolean valid = true;
-        for (Binfile _binfile : binfiles) {
-            if (!new File(path + _binfile.name).isFile()) {
-                showMessageDialog(null, "Firmware file " + _binfile.name + " missing", 
-                        "Bad Firmware Configuration", JOptionPane.ERROR_MESSAGE);
-                valid = false;
-            }
-        }
-        return valid;
-    }
-
-    // 
-    public String getAppbin() {
-        return appbin;
-    }
-    
-    @Override
-    public String toString() {
-        return name;
-    }
-}
-
-// ESPSFlashTool JSON Config
-class FTConfig {
-    String release;
-    String version;
-    String baudrate;
-    ArrayList<ESPSBoard> boards;
-}
-
-// Serial Ports
-class ESPSSerialPort {
-    private final SerialPort port;      // Hardwire ID or path to port;
-
-    public ESPSSerialPort(SerialPort port) {
-        this.port = port;
-    }
-    
-    public SerialPort getPort() {
-        return port;
-    }
-
-    @Override
-    public String toString() {
-        return (port.getSystemPortName() + " - " + port.getDescriptivePortName());
-    }    
-}
-
-// ESPixelStick JSON Config
-class ESPSConfig {
-    int cfgver;
-    boolean init = true;    // Flag to force config save / initialization
-    Device device;
-    Network network;
-                
-    class Network {
-        String  ssid;
-        String  passphrase;
-        String  hostname;
-        String  ip;
-        String  netmask;
-        String  gateway;
-        boolean dhcp;           // Use DHCP
-        int     sta_timeout;    // Timeout when connecting as a client (station)
-        boolean ap_fallback;    // Fallback to AP if fail to associate
-        int     ap_timeout;     // How long to wait in AP mode with no connection before rebooting
-        boolean ap_reboot;      // Reboot on fail to connect
-    }
-
-    class Device {
-        String  id;             // Device ID
-    }
-}
-
-public class ESPSFlashToolUI extends javax.swing.JFrame {
-    private final DefaultComboBoxModel<ESPSBoard> modelBoard   = new DefaultComboBoxModel<>();
-    private final DefaultComboBoxModel<ESPSSerialPort> modelPort   = new DefaultComboBoxModel<>();
-    private final String fwPath = "firmware/";          // Path for firmware binaries
-    private final String execPath = "bin/";             // Path for executables
-    private final String fsPath = "fs/";                // Path for filesystem
-    private final String fsBin = "filesystem.bin";      // Filesystem Image
-    private final String configJson = "config.json";    // ESPixelStick config.json
-    private ImageTask ftask;                            // SwingWorker task to build and flash
+    private final DefaultComboBoxModel<Board> modelBoard = new DefaultComboBoxModel<>();
+    private final DefaultComboBoxModel<ESPSSerialPort> modelPort = new DefaultComboBoxModel<>();
 
     /* Validation Patterns */
     private static final String HOSTNAME_PATTERN = "^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])$";
-    
-    private String OsName;
-    private String EspPlatformName;
-    private String esptool;      // esptool binary to use with path
-    private String mkfilesystem; // filesystem binary to use with path
-    private String python;       // python binary to use
-    
-    private ESPSConfig config;
-    private FTConfig ftconfig;
-    private ESPSBoard board;
-    private ESPSSerialPort port;
+
     private SerialPort lastPort;
-    private boolean isWindows;
-    
+
     /**
      * Creates new form ESPSFlashToolUI
      */
-    public ESPSFlashToolUI() {
-        // Detect OS and set binary paths
-        isWindows = false;
-        try {
-            if (!detectOS())
-                showMessageDialog(null, "Failed to detect OS",            
-                        "OS Detection Failure", JOptionPane.ERROR_MESSAGE);
-        } catch (IOException ex) {
-            Logger.getLogger(ESPSFlashToolUI.class.getName()).log(Level.SEVERE, null, ex);
+    public ESPSFlashToolUI()
+    {
+    }
+
+    public void init()
+    {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+     * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
+         */
+        try
+        {
+            /*
+        for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+            if ("Nimbus".equals(info.getName())) {
+                javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                break;
+            }
+        }*/
+
+            // Set system look and feel
+            javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getSystemLookAndFeelClassName());
+
         }
-        
-        // Read FT Config and set default device
-        Gson gson = new Gson();
-        try {
-            ftconfig = gson.fromJson(
-                    new FileReader(fwPath + "firmware.json"), FTConfig.class);
-        } catch (FileNotFoundException ex) {
-            showMessageDialog(null, "Unable to find firmware configuration file", 
-                    "Failed deserialize", JOptionPane.ERROR_MESSAGE);
-            System.exit(0);
+        catch (ClassNotFoundException ex)
+        {
+            java.util.logging.Logger.getLogger(ESPSFlashToolUI.class
+                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
+
         }
-        
-        if (ftconfig.boards != null) {
-            board = ftconfig.boards.get(0);
-        } else {
-            showMessageDialog(null, "No boards found in configuration file", 
-                    "Bad configuration", JOptionPane.ERROR_MESSAGE);
-            System.exit(0);
+        catch (InstantiationException ex)
+        {
+            java.util.logging.Logger.getLogger(ESPSFlashToolUI.class
+                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
+
         }
-        
+        catch (IllegalAccessException ex)
+        {
+            java.util.logging.Logger.getLogger(ESPSFlashToolUI.class
+                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
+
+        }
+        catch (javax.swing.UnsupportedLookAndFeelException ex)
+        {
+            java.util.logging.Logger.getLogger(ESPSFlashToolUI.class
+                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
         // Netbeans init routine
         initComponents();
+
         setLocationRelativeTo(null);
 
         // Set release label
-        lblRelease.setText(ftconfig.release);
-        
+        lblRelease.setText(ESPSFlashTool.ftconfig.getRelease());
+
         // Setup export dialog
-        dlgSave.setFileFilter(new FileNameExtensionFilter("ESPS Firmware Update", "efu"));
-        dlgSave.setSelectedFile(new File ("espixelstick.efu"));
-        
+        dlgSave.setFileFilter(
+                new FileNameExtensionFilter("ESPS Firmware Update", "efu"));
+        dlgSave.setSelectedFile(
+                new File("espixelstick.efu"));
+
         // Verify and Populate boards
-        for (ESPSBoard x : ftconfig.boards) {
-            if (x.verify(fwPath)) {
+        for (Board x : ESPSFlashTool.ftconfig.getBoards())
+        {
+            String FwPath = ESPSFlashTool.paths.getFwPath();
+            if (x.verify(FwPath))
+            {
                 modelBoard.addElement(x);
-            } else {
-                showMessageDialog(null, "Firmware file(s) missing for " + x.toString(), 
+            }
+            else
+            {
+                showMessageDialog(null, "Firmware file(s) missing for " + x.toString(),
                         "Bad Firmware Configuration", JOptionPane.ERROR_MESSAGE);
             }
         }
-               
+
         // Populate serial ports
         for (SerialPort serial : SerialPort.getCommPorts())
+        {
             modelPort.addElement(new ESPSSerialPort(serial));
-        
-        // Deserialize config.json
-        try {
-            config = gson.fromJson(new FileReader(fsPath + configJson), ESPSConfig.class);
-        } catch (FileNotFoundException ex) {
-            showMessageDialog(null, "Unable to find ESPixelStick Configuration file", 
-                    "Failed deserialize", JOptionPane.ERROR_MESSAGE);
         }
+        populateConfigValues();
 
-        // Populate config
-        txtSSID.setText(config.network.ssid);
-        txtPassphrase.setText(config.network.passphrase);
-        txtHostname.setText(config.network.hostname);
-        txtDevID.setText(config.device.id);
-        
         // Start serial monitor
         monitor();
     }
 
-    private boolean serializeConfig() {
-        boolean retval = true;
-        config.network.ssid = txtSSID.getText();
-        config.network.passphrase = txtPassphrase.getText();
-        config.network.hostname = txtHostname.getText();
-        config.device.id = txtDevID.getText();
-
-        try (Writer fw = new FileWriter(fsPath + configJson)) {
-            Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
-            gson.toJson(config, fw);
-        } catch (IOException ex) {
-            showMessageDialog(null, "Failed to save " + configJson, 
-                    "Failed serialize", JOptionPane.ERROR_MESSAGE);
-            retval = false;
-        }
-        
-        return retval;
-    }
-    
-    private boolean detectOS() throws IOException {
-        boolean retval = true;
-        String os = System.getProperty("os.name").toLowerCase();
-        String arch = System.getProperty("os.arch").toLowerCase();
-        System.out.println("OS: " + os + " / " + arch);
-        
-        if (os.contains("win")) {
-            System.out.println("Detected Windows");
-            OsName = "win32/";
-            isWindows = true;
-        } else if (os.contains("mac")) {
-            System.out.println("Detected Mac");
-            OsName = "macos/";
-        } else if (os.contains("linux") && arch.contains("64")) {
-            OsName = "linux64/";
-        } else {
-            retval = false;
-        }
-        
-        return retval;
-    }
-    
-    private void SetToolPaths()
+    private void populateConfigValues()
     {
-        EspPlatformName = board.chip + "/";
-        mkfilesystem = execPath + OsName + "mklittlefs";
-        esptool  = execPath + "upload.py";
-        
-        if(isWindows) {
-            python = execPath + OsName + "python3/python";
-        } else {
-            python = "python";
-            try
-            {
-                java.lang.Runtime.getRuntime().exec("chmod 550 " + esptool);
-                java.lang.Runtime.getRuntime().exec("chmod 550 " + mkfilesystem);
-            }
-            catch( IOException ex) {}
-        }
+        // Populate config
+        txtSSID.setText(ESPSFlashTool.deviceConfig.getSSID());
+        txtPassphrase.setText(ESPSFlashTool.deviceConfig.getPassphrase());
+        txtHostname.setText(ESPSFlashTool.deviceConfig.getHostname());
+        txtDevID.setText(ESPSFlashTool.deviceConfig.getId());
+    }
+
+    private boolean serializeConfig()
+    {
+        boolean retval = true;
+        ESPSFlashTool.deviceConfig.setSSID(txtSSID.getText());
+        ESPSFlashTool.deviceConfig.setPassphrase(txtPassphrase.getText());
+        ESPSFlashTool.deviceConfig.setHostname(txtHostname.getText());
+        ESPSFlashTool.deviceConfig.setId(txtDevID.getText());
+
+        return ESPSFlashTool.deviceConfig.serializeConfig();
     }
 
     // execPath + EspPlatformPath +
-    private void monitor() {
-        if (port == null)
+    private void monitor()
+    {
+        if (ESPSFlashTool.port == null)
         {
             txtSerialOutput.append("No Port Defined");
             return;
         }
 
-        SerialPort serial = port.getPort();
+        SerialPort serial = ESPSFlashTool.port.getPort();
         if (serial == null)
         {
             txtSerialOutput.append("Desired Serial Port Not Found");
             return;
         }
 
-        serial.setComPortParameters(Integer.parseInt(ftconfig.baudrate),
-                8, SerialPort.ONE_STOP_BIT, SerialPort.NO_PARITY);
+        serial.setComPortParameters(Integer.parseInt(ESPSFlashTool.ftconfig.getBaudrate()),
+                8, SerialPort.ONE_STOP_BIT, SerialPort.NO_PARITY
+        );
 
-        txtSerialOutput.setText(""); 
-        if (!serial.openPort()) {
+        txtSerialOutput.setText("");
+        if (!serial.openPort())
+        {
             txtSerialOutput.append("Failed to open serial port " + serial.getSystemPortName());
-        } else {
-            serial.addDataListener(new SerialPortDataListener() {
+        }
+        else
+        {
+            ESPSFlashTool.deviceConfig.ProcessOnDeviceConfigFiles();
+            serial.addDataListener(new SerialPortDataListener()
+            {
                 @Override
-                public int getListeningEvents() { return SerialPort.LISTENING_EVENT_DATA_AVAILABLE; }
+                public int getListeningEvents()
+                {
+                    return SerialPort.LISTENING_EVENT_DATA_AVAILABLE;
+                }
 
                 @Override
-                public void serialEvent(SerialPortEvent event) {
+                public void serialEvent(SerialPortEvent event)
+                {
                     if (event.getEventType() != SerialPort.LISTENING_EVENT_DATA_AVAILABLE)
+                    {
                         return;
+                    }
                     byte[] data = new byte[serial.bytesAvailable()];
                     serial.readBytes(data, data.length);
                     txtSerialOutput.append(new String(data, StandardCharsets.US_ASCII));
@@ -343,217 +202,45 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
         }
     }
 
-    private void disableInterface() {
+    private void disableInterface()
+    {
         cboxPort.setEnabled(false);
         cboxFirmware.setEnabled(false);
         disableButtons();
     }
 
-    private void enableInterface() {
+    public void enableInterface()
+    {
         cboxPort.setEnabled(true);
         cboxFirmware.setEnabled(true);
         enableButtons();
     }
-    
-    private void disableButtons() {
+
+    private void disableButtons()
+    {
         btnFlash.setEnabled(false);
         btnExport.setEnabled(false);
     }
 
-    private void enableButtons() {
+    private void enableButtons()
+    {
         btnFlash.setEnabled(true);
         btnExport.setEnabled(true);
     }
 
-    private List<String> cmdEsptoolErase()
+    public void setTxtSystemOutput(String message)
     {
-        List<String> list = new ArrayList<>();
-        
-        list.add(python);
-        list.add(esptool);
-        list.add("--chip");
-        list.add(board.chip);
-        list.add("--baud");
-        list.add(board.esptool.baudrate);
-        list.add("--port");
-        if (isWindows)
-            list.add(port.getPort().getSystemPortName());
-        else
-            list.add("/dev/" + port.getPort().getSystemPortName());
-
-        list.add("erase_flash");
-        // list.add(board.filesystem.offset);
-        // list.add(board.filesystem.size);
-
-        return list;
+        txtSystemOutput.setText(message);
     }
 
-    private List<String> cmdEsptool() {
-        List<String> list = new ArrayList<>();
-        
-        list.add(python);
-        list.add(esptool);
-        list.add("--chip");
-        list.add(board.chip);
-        list.add("--baud");
-        list.add(board.esptool.baudrate);
-        list.add("--port");
-        if (isWindows)
-            list.add(port.getPort().getSystemPortName());
-        else
-            list.add("/dev/" + port.getPort().getSystemPortName());
-
-        // Reset stuff is  cated in the esptool options
-        list.addAll(Arrays.asList(board.esptool.options.split(" ")));
-
-        // Flash command can carry options as well
-        list.addAll(Arrays.asList(board.esptool.flashcmd.split(" ")));
-
-        // Add all the bin files
-        for (ESPSBoard.Binfile binfile : board.binfiles) {
-            list.add(binfile.offset);
-            list.add(fwPath + binfile.name);
-        }
-
-        // And finally the filesystem
-        list.add(board.filesystem.offset);
-        list.add(fwPath + fsBin);
-
-        return list;
+    public void appendTxtSystemOutput(String message)
+    {
+        txtSystemOutput.append(message);
     }
-    
-    private List<String> cmdMkfilesystem() {
-        List<String> list = new ArrayList<>();
-        
-        list.add(mkfilesystem);
-        list.add("-c");
-        list.add(fsPath);
-        list.add("-p");
-        list.add(board.filesystem.page);
-        list.add("-b");
-        list.add(board.filesystem.block);
-        list.add("-s");
-        list.add(board.filesystem.size);
-        list.add(fwPath + fsBin);
-        
-        return list;        
-    }
-    
-    private class ImageTask extends SwingWorker<Integer, String> {
-        private int state;
-        private int status;
-        private boolean flash;
 
-        public ImageTask(boolean flash) {
-            if (port != null) {
-                SerialPort serial = port.getPort();
-                if (serial != null)
-                    port.getPort().closePort();
-            }
-            this.flash = flash;
-        }
-        
-        private int exec(List<String> command) {
-            try {
-                ProcessBuilder pb = new ProcessBuilder(command);
-                pb.redirectErrorStream(true);
-                Process p = pb.start();
-                String s;
-                BufferedReader stdout = new BufferedReader(
-                        new InputStreamReader(p.getInputStream()));
-                
-                while ((s = stdout.readLine()) != null && !isCancelled())
-                    publish(s);
-
-                if (!isCancelled())
-                    state = p.waitFor();
-
-                publish("Done");
-
-                p.getInputStream().close();
-                p.getOutputStream().close();
-                p.getErrorStream().close();
-                p.destroy();
-                return p.exitValue();
-            } catch (IOException | InterruptedException ex) {
-                ex.printStackTrace(System.err);
-                return -1;
-            }
-        }
-        
-        @Override
-        protected Integer doInBackground() {
-            String command = "";
-            
-            SetToolPaths();
-
-            // Build Filesystem
-            txtSystemOutput.setText(null);
-            publish("-= Building Filesystem Image =-");
-            for (String opt : cmdMkfilesystem())
-                command = (command + " " + opt);
-            publish(command);
-            status = exec(cmdMkfilesystem());
-            if (status != 0)
-            {
-                showMessageDialog(null, "Failed to make Filesytem Image",
-                        "Failed mkfilesystem", JOptionPane.ERROR_MESSAGE);
-            } 
-            else
-            {
-                // Flash the images
-                if (flash) {
-                    publish("\n-= Programming ESP =-");
-
-                    command = "";
-                    for (String opt : cmdEsptoolErase())
-                        command = (command + " " + opt);
-                    publish(command);
-                    status = exec(cmdEsptoolErase());
-
-                    command = "";
-                    for (String opt : cmdEsptool())
-                        command = (command + " " + opt);
-                    publish(command);
-                    status = exec(cmdEsptool());
-                    if (status != 0) {
-                        showMessageDialog(null, "Failed to program the ESP.\n" +
-                                                "Verify your device is properly connected and in programming mode.",
-                                                "Failed esptool", JOptionPane.ERROR_MESSAGE);
-                    }
-                }
-            }
-                    
-            return state;
-        }
-        
-        @Override
-        protected void process(java.util.List<String> messages) {
-            for (String message : messages)
-                txtSystemOutput.append(message + "\n");
-        }
-
-        @Override
-        protected void done() {
-            monitor();
-            if (status == 0)
-                if (flash)
-                    txtSystemOutput.append("\n-= Programming Complete =-");
-                else
-                    txtSystemOutput.append("\n-= Image Creation Complete =-");
-            else
-                if (flash)
-                    txtSystemOutput.append("\n*** PROGRAMMING FAILED ***");
-                else
-                    txtSystemOutput.append("\n*** IMAGE CREATION FAILED ***");
-            enableInterface();
-        }
-    }
-    
     /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
+     * This method is called from within the constructor to initialize the form. WARNING: Do NOT modify this code. The content of
+     * this method is always regenerated by the Form Editor.
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -801,106 +488,87 @@ public class ESPSFlashToolUI extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void cboxPortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboxPortActionPerformed
-        port = cboxPort.getItemAt(cboxPort.getSelectedIndex());
-        if (port == null)
+        ESPSFlashTool.port = cboxPort.getItemAt(cboxPort.getSelectedIndex());
+        if (ESPSFlashTool.port == null)
+        {
             return;
+        }
         if (lastPort != null)
+        {
             lastPort.closePort();
-        lastPort = port.getPort();
+        }
+        lastPort = ESPSFlashTool.port.getPort();
+        ESPSFlashTool.deviceConfig.ProcessOnDeviceConfigFiles();
+        populateConfigValues();
         monitor();
     }//GEN-LAST:event_cboxPortActionPerformed
 
     private void cboxFirmwareActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboxFirmwareActionPerformed
-        board = cboxFirmware.getItemAt(cboxFirmware.getSelectedIndex());
+        ESPSFlashTool.board = cboxFirmware.getItemAt(cboxFirmware.getSelectedIndex());
+        ESPSFlashTool.deviceConfig.ProcessOnDeviceConfigFiles();
+        populateConfigValues();
     }//GEN-LAST:event_cboxFirmwareActionPerformed
 
     private void btnFlashActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFlashActionPerformed
-        if (serializeConfig()) {
+        if (serializeConfig())
+        {
             disableInterface();
-            ftask = new ImageTask(true);
-            ftask.execute();
+            ESPSFlashTool.ftask.UploadImages();
         }
     }//GEN-LAST:event_btnFlashActionPerformed
 
     private void btnExportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExportActionPerformed
-        if (dlgSave.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-            try {
-                if (serializeConfig()) {
+        if (dlgSave.showSaveDialog(this) == JFileChooser.APPROVE_OPTION)
+        {
+            try
+            {
+                if (serializeConfig())
+                {
                     disableInterface();
-                    ftask = new ImageTask(false);
-                    ftask.execute();
-                    
+                    ESPSFlashTool.ftask.UploadImages();
+
                     // Block until filesystem image is built
-                    try {
-                        ftask.get();
-                    } catch (InterruptedException | ExecutionException ex) {
-                        Logger.getLogger(ESPSFlashToolUI.class.getName()).log(Level.SEVERE, null, ex);
+                    try
+                    {
+                        ESPSFlashTool.ftask.get();
                     }
-                    
-                    UpdateBuilder.build(fwPath + board.getAppbin(), fwPath + fsBin,
-                            dlgSave.getSelectedFile().getAbsolutePath());
+                    catch (InterruptedException | ExecutionException ex)
+                    {
+                        Logger.getLogger(ESPSFlashToolUI.class
+                                .getName()).log(Level.SEVERE, null, ex);
+                    }
+                    UpdateBuilder.build(
+                            ESPSFlashTool.paths.getFwPath() + ESPSFlashTool.board.getAppbin(),
+                            ESPSFlashTool.paths.getFwPath() + ESPSFlashTool.paths.getFsBin(),
+                            dlgSave.getSelectedFile().getAbsolutePath()
+                    );
                 }
-            } catch (IOException ex) {
-                showMessageDialog(null, "Failed to build firmware update\n" +
-                        ex.getMessage(), "Failed EFU Build", JOptionPane.ERROR_MESSAGE);
+            }
+            catch (IOException ex)
+            {
+                showMessageDialog(null, "Failed to build firmware update\n"
+                        + ex.getMessage(), "Failed EFU Build", JOptionPane.ERROR_MESSAGE);
             }
         }
     }//GEN-LAST:event_btnExportActionPerformed
 
     private void txtHostnameKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtHostnameKeyReleased
-        if (txtHostname.getText().length() == 0 | txtHostname.getText().matches(HOSTNAME_PATTERN)) {
+        if (txtHostname.getText().length() == 0 | txtHostname.getText().matches(HOSTNAME_PATTERN))
+        {
             txtHostname.setForeground(Color.black);
             enableButtons();
-        } else {
+        }
+        else
+        {
             disableButtons();
             txtHostname.setForeground(Color.red);
         }
     }//GEN-LAST:event_txtHostnameKeyReleased
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            /*
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }*/
-            
-            // Set system look and feel
-            javax.swing.UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(ESPSFlashToolUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(ESPSFlashToolUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(ESPSFlashToolUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(ESPSFlashToolUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new ESPSFlashToolUI().setVisible(true);
-            }
-        });
-    }
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnExport;
     private javax.swing.JButton btnFlash;
-    private javax.swing.JComboBox<ESPSBoard> cboxFirmware;
+    private javax.swing.JComboBox<Board> cboxFirmware;
     private javax.swing.JComboBox<ESPSSerialPort> cboxPort;
     private javax.swing.JFileChooser dlgSave;
     private javax.swing.Box.Filler filler1;
