@@ -21,7 +21,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -32,23 +31,20 @@ class DeviceConfig
 {
 
     private final String DeviceConfigFileName = "config.json";    // ESPixelStick config.json
-    // private JsonElement LocalJsonConfig;
-    // private JsonElement DeviceJsonConfig;
     private Map<String, Object> LocalConfigMap;
     private Map<String, Object> DeviceConfigMap;
-    private JsonParser parser = new JsonParser();
 
     public void init()
     {
         ProcessLocalDeviceConfigFile();
     } // init
 
+    @SuppressWarnings("unchecked")
     private void ProcessLocalDeviceConfigFile()
     {
         // read the file that is kept locally
         try
         {
-            // LocalJsonConfig = parser.parse(new FileReader(ESPSFlashTool.paths.getFsPath() + DeviceConfigFileName));
             Gson gson = new Gson();
             LocalConfigMap = (Map<String, Object>) gson.fromJson(new FileReader(ESPSFlashTool.paths.getFsPath() + DeviceConfigFileName), Map.class);
             // System.out.println("LocalConfigMap: " + LocalConfigMap.toString());
@@ -66,59 +62,79 @@ class DeviceConfig
         }
     } // ProcessLocalDeviceConfigFile
 
-    public void ProcessOnDeviceConfigFiles()
+    @SuppressWarnings("unchecked")
+    public void processDownloadedDeviceConfigFiles()
     {
-        do // once
+        ESPSFlashTool.flashToolUI.monitor();
+
+        String TargetFileName = GetDownloadFsName();
+        Path fsPath = Paths.get(TargetFileName + ".bin");
+
+        // parse it
+        Gson gson = new Gson();
+        String ConfigFilePath = TargetFileName + "/" + DeviceConfigFileName;
+        System.out.println(" ConfigFilePath: " + ConfigFilePath);
+        try
         {
-            String TargetFsName = ESPSFlashTool.board.name.replace(' ', '_') + "_"
-                    + ESPSFlashTool.board.filesystem.offset
-                    + "_"
-                    + ESPSFlashTool.board.filesystem.size;
-            Path fsPath = Paths.get(TargetFsName + ".bin");
-
-            // download the device file system
-            GetFsFromDevice(fsPath.toString());
-
-            if (!Files.exists(fsPath))
-            {
-                ESPSFlashTool.flashToolUI.appendTxtSystemOutput("ERROR: File System Image file '" + fsPath.toString() + "' was not created");
-                break;
-            }
-
-            try
-            {
-                // get the config file
-                ESPSFlashTool.ftask.exec(ESPSFlashTool.ftask.cmdParseFileFystem(TargetFsName));
-
-                // parse it
-                // DeviceJsonConfig = parser.parse(new FileReader(TargetFsName + "/" + DeviceConfigFileName));
-                Gson gson = new Gson();
-                String ConfigFilePath = TargetFsName + "/" + DeviceConfigFileName;
-                // System.out.println(" ConfigFilePath: " + ConfigFilePath);
-                DeviceConfigMap = gson.fromJson(new FileReader(ConfigFilePath), Map.class);
-                // System.out.println("DeviceConfigMap: " + DeviceConfigMap.toString());
-                /*
+            DeviceConfigMap = gson.fromJson(new FileReader(ConfigFilePath), Map.class);
+            // System.out.println("DeviceConfigMap: " + DeviceConfigMap.toString());
+            /*
                 Gson gson = new GsonBuilder().setPrettyPrinting().create();
                 String prettyJsonString = gson.toJson(DeviceJsonConfig);
                 System.out.println(prettyJsonString);
-                 */
-            }
-            catch (FileNotFoundException ex)
+             */
+        }
+        catch (FileNotFoundException ex)
+        {
+            JOptionPane.showMessageDialog(null,
+                    "Unable to find ESPixelStick Downloaded Configuration file",
+                    "Failed deserialize", JOptionPane.ERROR_MESSAGE);
+        }
+
+        ESPSFlashTool.flashToolUI.populateConfigValues();
+    }
+
+    public void ProcessOnDeviceConfigFiles()
+    {
+        System.out.println("ProcessOnDeviceConfigFiles - Start");
+        do // once
+        {
+            if (ESPSFlashTool.board.name.isEmpty())
             {
-                JOptionPane.showMessageDialog(null,
-                        "Unable to process the ESPixelStick Device Configuration file",
-                        "Failed deserialize", JOptionPane.ERROR_MESSAGE);
+                ESPSFlashTool.flashToolUI.appendTxtSystemOutput("Skipping empty board.\nDone\n");
+                break;
             }
+
+            // download and parse the device file system
+            System.out.println("GetFsFromDevice - Start");
+            ImageTask ftask = new ImageTask(ImageTask.ImageTaskActionToPerform.DOWNLOAD_FILESYSTEM); // SwingWorker task to build and flash
+            ftask.execute();
 
         } while (false);
 
+        System.out.println("ProcessOnDeviceConfigFiles - Done");
     } // GetDeviceConfigFiles
 
     private void GetFsFromDevice(String TargetFsFileName)
     {
-        ESPSFlashTool.flashToolUI.setTxtSystemOutput("-= Retrieving Filesystem Image =-\n");
-        // System.out.println("-= Retrieving Filesystem Image =-");
-        ESPSFlashTool.ftask.exec(ESPSFlashTool.ftask.cmdGetfilesystem(TargetFsFileName));
+        System.out.println("GetFsFromDevice - Start");
+        ImageTask ftask = new ImageTask(ImageTask.ImageTaskActionToPerform.DOWNLOAD_FILESYSTEM); // SwingWorker task to build and flash
+        ftask.execute();
+        // Block until filesystem image is downloaded
+/*
+        try
+        {
+            System.out.println("GetFsFromDevice - Task Start");
+            ftask.get();
+            System.out.println("GetFsFromDevice - Task Done");
+        }
+        catch (InterruptedException | ExecutionException ex)
+        {
+            System.out.println("GetFsFromDevice - Task Error");
+            Logger.getLogger(ESPSFlashToolUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+         */
+        System.out.println("GetFsFromDevice - End");
     } // GetFsFromDevice
 
     public boolean serializeConfig()
@@ -132,7 +148,7 @@ class DeviceConfig
             {
                 gson.toJson(DeviceConfigMap, fw);
             }
-            else
+            else if (null != LocalConfigMap)
             {
                 gson.toJson(LocalConfigMap, fw);
             }
@@ -147,16 +163,23 @@ class DeviceConfig
         return retval;
     }
 
-    private String GetJsonValueByKey(String key)
+    public String GetDownloadFsName()
     {
-        String Response = "";
+        String TargetFileName = ESPSFlashTool.board.name + "_" + ESPSFlashTool.board.filesystem.offset + "_" + ESPSFlashTool.board.filesystem.size;
+        TargetFileName = TargetFileName.replace(" ", "_");
+        return TargetFileName;
+    }
+
+    private Object GetJsonValueByKey(String key)
+    {
+        Object Response = null;
         // System.out.println("           Find: " + key);
         if (null != DeviceConfigMap)
         {
             // System.out.println("DeviceConfigMap: " + DeviceConfigMap.toString());
             Response = GetJsonValueByKey(key, DeviceConfigMap);
         }
-        if (Response.isEmpty())
+        if (null == Response)
         {
             // System.out.println(" LocalConfigMap: " + LocalConfigMap.toString());
             Response = GetJsonValueByKey(key, LocalConfigMap);
@@ -166,7 +189,8 @@ class DeviceConfig
         return Response;
     } // GetJsonValueByKey
 
-    private String GetJsonValueByKey(String key, Map<String, Object> jsonData)
+    @SuppressWarnings("unchecked")
+    private Object GetJsonValueByKey(String key, Map<String, Object> jsonData)
     {
         String Response = "";
 
@@ -198,6 +222,7 @@ class DeviceConfig
         return Response;
     } // GetJsonValueByKey
 
+    @SuppressWarnings("unchecked")
     private String GetJsonKeyPath(String key, Map<String, Object> jsonData)
     {
         String Response = "";
@@ -236,7 +261,7 @@ class DeviceConfig
         return Response;
     } // GetJsonKeyPath
 
-    private void SetJsonValueByKey(String key, String value)
+    private void SetJsonValueByKey(String key, Object value)
     {
         // System.out.println(" LocalConfigMap: " + LocalConfigMap.toString());
         // System.out.println("DeviceConfigMap: " + LocalConfigMap.toString());
@@ -249,7 +274,8 @@ class DeviceConfig
         // System.out.println("Validated value: " + GetJsonValueByKey(key));
     } // SetJsonValueByKey
 
-    private void SetJsonValueByKey(String key, String value, Map<String, Object> jsonData)
+    @SuppressWarnings("unchecked")
+    private void SetJsonValueByKey(String key, Object value, Map<String, Object> jsonData)
     {
         String KeyPath = GetJsonKeyPath(key, jsonData);
         // System.out.println("KeyPath: " + KeyPath);
@@ -284,7 +310,13 @@ class DeviceConfig
 
     public String getSSID()
     {
-        return GetJsonValueByKey("ssid");
+        String response = "";
+        Object value = GetJsonValueByKey("ssid");
+        if (null != value)
+        {
+            response = value.toString();
+        }
+        return response;
     }
 
     public void setPassphrase(String value)
@@ -294,7 +326,13 @@ class DeviceConfig
 
     public String getPassphrase()
     {
-        return GetJsonValueByKey("passphrase");
+        String response = "";
+        Object value = GetJsonValueByKey("passphrase");
+        if (null != value)
+        {
+            response = value.toString();
+        }
+        return response;
     }
 
     public void setHostname(String value)
@@ -304,7 +342,13 @@ class DeviceConfig
 
     public String getHostname()
     {
-        return GetJsonValueByKey("hostname");
+        String response = "";
+        Object value = GetJsonValueByKey("hostname");
+        if (null != value)
+        {
+            response = value.toString();
+        }
+        return response;
     }
 
     public void setId(String value)
@@ -314,7 +358,29 @@ class DeviceConfig
 
     public String getId()
     {
-        return GetJsonValueByKey("id");
+        String response = "";
+        Object value = GetJsonValueByKey("id");
+        if (null != value)
+        {
+            response = value.toString();
+        }
+        return response;
+    }
+
+    public void setAp_fallback(boolean value)
+    {
+        SetJsonValueByKey("ap_fallback", value);
+    }
+
+    public boolean getAp_fallback()
+    {
+        boolean response = false;
+        Object value = GetJsonValueByKey("ap_fallback");
+        if (null != value)
+        {
+            response = Boolean.valueOf(value.toString());
+        }
+        return response;
     }
 
 } // class DeviceConfig
