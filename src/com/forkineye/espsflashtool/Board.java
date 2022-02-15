@@ -22,12 +22,12 @@ import javax.swing.*;
 public class Board
 {
 
-    String name;
-    String description;
-    String chip;
-    String appbin;
+    String name = "";
+    String description = "";
+    String chip = "";
+    String appbin = "";
     Esptool esptool;
-    ArrayList<Binfile> binfiles;
+    ArrayList<Binfile> binfiles = new ArrayList<Binfile>();
     Filesystem filesystem;
 
     class Esptool
