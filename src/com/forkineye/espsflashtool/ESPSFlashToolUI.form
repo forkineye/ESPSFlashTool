@@ -72,6 +72,8 @@
                   <Group type="102" attributes="0">
                       <EmptySpace min="-2" pref="10" max="-2" attributes="0"/>
                       <Component id="CheckBoxApFallback" min="-2" pref="79" max="-2" attributes="0"/>
+                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                      <Component id="CheckBoxReboot" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                   </Group>
                   <Group type="102" alignment="1" attributes="0">
@@ -118,7 +120,10 @@
                   <Component id="jLabel5" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="CheckBoxApFallback" max="32767" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="CheckBoxApFallback" alignment="3" max="32767" attributes="0"/>
+                  <Component id="CheckBoxReboot" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="cboxFirmware" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -424,6 +429,14 @@
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="CheckBoxApFallbackActionPerformed"/>
       </Events>
+    </Component>
+    <Component class="javax.swing.JCheckBox" name="CheckBoxReboot">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Reboot"/>
+        <Property name="actionCommand" type="java.lang.String" value="CheckBoxReboot"/>
+        <Property name="focusTraversalPolicyProvider" type="boolean" value="true"/>
+        <Property name="horizontalTextPosition" type="int" value="2"/>
+      </Properties>
     </Component>
   </SubComponents>
 </Form>

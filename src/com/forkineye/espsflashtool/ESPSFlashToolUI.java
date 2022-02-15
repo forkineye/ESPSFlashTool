@@ -104,7 +104,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         dlgSave.setSelectedFile(
                 new File("espixelstick.efu"));
 
-        if (0 == ESPSFlashTool.ftconfig.getBoards().size())
+        if (ESPSFlashTool.ftconfig.getBoards().isEmpty())
         {
             showMessageDialog(null, "No boards found in configuration file",
                     "Bad configuration", JOptionPane.ERROR_MESSAGE);
@@ -145,6 +145,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         txtHostname.setText(ESPSFlashTool.deviceConfig.getHostname());
         txtDevID.setText(ESPSFlashTool.deviceConfig.getId());
         CheckBoxApFallback.setSelected(ESPSFlashTool.deviceConfig.getAp_fallback());
+        CheckBoxReboot.setSelected(ESPSFlashTool.deviceConfig.getReboot());
     }
 
     private boolean serializeConfig()
@@ -154,6 +155,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         ESPSFlashTool.deviceConfig.setHostname(txtHostname.getText());
         ESPSFlashTool.deviceConfig.setId(txtDevID.getText());
         ESPSFlashTool.deviceConfig.setAp_fallback(CheckBoxApFallback.isSelected());
+        ESPSFlashTool.deviceConfig.setReboot(CheckBoxReboot.isSelected());
 
         return ESPSFlashTool.deviceConfig.serializeConfig();
     }
@@ -289,6 +291,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         lblRelease = new javax.swing.JLabel();
         filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0));
         CheckBoxApFallback = new javax.swing.JCheckBox();
+        CheckBoxReboot = new javax.swing.JCheckBox();
 
         dlgSave.setDialogType(javax.swing.JFileChooser.SAVE_DIALOG);
         dlgSave.setDialogTitle("Save Firmware Update");
@@ -467,6 +470,11 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
             }
         });
 
+        CheckBoxReboot.setText("Reboot");
+        CheckBoxReboot.setActionCommand("CheckBoxReboot");
+        CheckBoxReboot.setFocusTraversalPolicyProvider(true);
+        CheckBoxReboot.setHorizontalTextPosition(javax.swing.SwingConstants.LEFT);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -502,6 +510,8 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
                     .addGroup(layout.createSequentialGroup()
                         .addGap(10, 10, 10)
                         .addComponent(CheckBoxApFallback, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(CheckBoxReboot)
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
@@ -537,7 +547,9 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
                     .addComponent(txtDevID, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel5))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(CheckBoxApFallback, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(CheckBoxApFallback, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(CheckBoxReboot))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cboxFirmware, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -588,6 +600,19 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
     }//GEN-LAST:event_btnFlashActionPerformed
 
     private void btnExportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExportActionPerformed
+        dlgSave.setSelectedFile(
+                new File(ESPSFlashTool.board.name + ".efu"));
+        try
+        {
+            File StartingPath = new File("./" + ESPSFlashTool.paths.getFwPath() + "/../");
+            System.out.println("StartingPath: " + StartingPath.toString());
+            dlgSave.setCurrentDirectory(StartingPath);
+        }
+        catch (Exception e)
+        {
+            System.out.println("use current default dir: " + e.toString());
+        }
+
         if (dlgSave.showSaveDialog(this) == JFileChooser.APPROVE_OPTION)
         {
             try
@@ -649,6 +674,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JCheckBox CheckBoxApFallback;
+    private javax.swing.JCheckBox CheckBoxReboot;
     private javax.swing.JButton btnDownload;
     private javax.swing.JButton btnExport;
     private javax.swing.JButton btnFlash;
