@@ -16,12 +16,10 @@
 package com.forkineye.espsflashtool;
 
 import com.fazecast.jSerialComm.SerialPort;
-import com.fazecast.jSerialComm.SerialPortDataListener;
-import com.fazecast.jSerialComm.SerialPortEvent;
+import com.forkineye.espsflashtool.ImageTask.ImageTaskActionToPerform;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -29,17 +27,29 @@ import javax.swing.JOptionPane;
 import static javax.swing.JOptionPane.showMessageDialog;
 import javax.swing.SwingWorker;
 
-class ImageTask extends SwingWorker<Integer, String>
+class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
 {
 
-    private int state;
-    private int status;
-    private boolean flash;
+    public enum ImageTaskActionToPerform
+    {
+        NOTHING,
+        ERASE_FLASH,
+        DOWNLOAD_FILESYSTEM,
+        UNPACK_FILESYSTEM,
+        CREATE_FILESYSTEM,
+        UPLOAD_FILESYSTEM,
+        UPLOAD_FIRMWARE,
+        CREATE_AND_UPLOAD_ALL
+    }
+
+    private int state = 0;
+    private int status = 0;
+    private ImageTaskActionToPerform flashAction = ImageTaskActionToPerform.NOTHING;
     private final String fsBin = "filesystem.bin";      // Filesystem Image
 
-    public ImageTask(boolean _flash)
+    public ImageTask(ImageTaskActionToPerform action)
     {
-        flash = _flash;
+        flashAction = action;
         EnsureSerialPortIsOff();
     }
 
@@ -56,23 +66,124 @@ class ImageTask extends SwingWorker<Integer, String>
 
     } // EnsureSerialPortIsOff
 
-    public int exec(List<String> command)
+    @Override
+    public void process(java.util.List<String> messages)
     {
-        int response = 0;
-        if (!command.isEmpty())
+        for (String message : messages)
         {
+            ESPSFlashTool.flashToolUI.appendTxtSystemOutput(message + "\n");
+            // System.out.println(message);
+
+        }
+    }
+
+    @Override
+    protected ImageTaskActionToPerform doInBackground()
+    {
+        System.out.println("doInBackground - Start");
+        status = 0;
+        ImageTaskActionToPerform Response = ImageTaskActionToPerform.NOTHING;
+        ESPSFlashTool.paths.setToolPaths();
+
+        switch (flashAction)
+        {
+            case ERASE_FLASH:
+            {
+                System.out.println("doInBackground - ERASE_FLASH");
+                status = EraseDeviceFlash();
+                break;
+            }
+            case DOWNLOAD_FILESYSTEM:
+            {
+                System.out.println("doInBackground - DOWNLOAD_FILESYSTEM");
+                status = DownloadDeviceFileSystem();
+            }
+            case UNPACK_FILESYSTEM:
+            {
+                System.out.println("doInBackground - UNPACK_FILESYSTEM");
+                status = UnpackDeviceFileSystem();
+                ESPSFlashTool.deviceConfig.processDownloadedDeviceConfigFiles();
+                break;
+            }
+            case CREATE_FILESYSTEM:
+            {
+                System.out.println("doInBackground - CREATE_FILESYSTEM");
+                status = CreateFileSystemImage();
+                break;
+            }
+            case UPLOAD_FILESYSTEM:
+            {
+                System.out.println("doInBackground - UPLOAD_FILESYSTEM");
+                status = UploadFileSystemToDevice();
+                break;
+            }
+            case UPLOAD_FIRMWARE:
+            {
+                System.out.println("doInBackground - UPLOAD_FIRMWARE");
+                status = UploadFwImages();
+                break;
+            }
+            case CREATE_AND_UPLOAD_ALL:
+            {
+                System.out.println("doInBackground - CREATE_AND_UPLOAD_ALL");
+                status = CreateFileSystemImage();
+                status |= EraseDeviceFlash();
+                status |= UploadFileSystemToDevice();
+                status |= UploadFwImages();
+                break;
+            }
+            case NOTHING:
+            default:
+            {
+                // Nothing to do
+                System.out.println("doInBackground - NOTHING");
+            }
+        }
+        System.out.println("doInBackground - End");
+        return Response;
+    }
+
+    @Override
+    public void done()
+    {
+        ESPSFlashTool.flashToolUI.monitor();
+        if (status == 0)
+        {
+            ESPSFlashTool.flashToolUI.appendTxtSystemOutput("\n-= ESP Action Complete =-");
+        }
+        else
+        {
+            ESPSFlashTool.flashToolUI.appendTxtSystemOutput("\n*** ESP Action FAILED ***");
+        }
+        ESPSFlashTool.flashToolUI.enableInterface();
+    }
+
+    private int exec(List<String> command)
+    {
+        System.out.println("exec - Start");
+        int response = 0;
+
+        do // once
+        {
+            if (command.isEmpty())
+            {
+                // nothing to do
+                break;
+            }
+
             String outCommand = "";
             for (String opt : command)
             {
                 outCommand = (outCommand + " " + opt);
             }
             publish(outCommand);
+            ESPSFlashTool.flashToolUI.appendTxtSystemOutput(outCommand + "\n");
+
+            Thread.yield();
             System.out.println(outCommand);
 
             try
             {
-                EnsureSerialPortIsOff();
-
                 ProcessBuilder pb = new ProcessBuilder(command);
                 pb.redirectErrorStream(true);
                 Process p = pb.start();
@@ -83,6 +194,10 @@ class ImageTask extends SwingWorker<Integer, String>
                 while ((s = stdout.readLine()) != null && !isCancelled())
                 {
                     publish(s);
+                    ESPSFlashTool.flashToolUI.appendTxtSystemOutput(s + "\n");
+                    System.out.println(s);
+
+                    Thread.yield();
                 }
 
                 if (!isCancelled())
@@ -91,6 +206,7 @@ class ImageTask extends SwingWorker<Integer, String>
                 }
 
                 publish("Done");
+                Thread.yield();
 
                 p.getInputStream().close();
                 p.getOutputStream().close();
@@ -103,46 +219,108 @@ class ImageTask extends SwingWorker<Integer, String>
                 ex.printStackTrace(System.err);
                 response = -1;
             }
-        }
+        } while (false);
+
+        System.out.println("exec - End");
         return response;
     }
 
-    public Integer UploadImages()
+    private Integer DownloadDeviceFileSystem()
     {
-        String command = "";
+        System.out.println("DownloadDeviceFileSystem - Start");
+        Integer Response = 0;
+        publish("-= Retreiving Filesystem Image =-");
+        Thread.yield();
+
+        Response = exec(cmdGetfilesystem());
+        if (Response != 0)
+        {
+            showMessageDialog(null, "Failed to Download the Filesytem Image from the device\n"
+                    + "Verify your device is properly connected and in programming mode.",
+                    "Failed cmdGetfilesystem", JOptionPane.ERROR_MESSAGE);
+        }
+        System.out.println("DownloadDeviceFileSystem - End");
+        return Response;
+    }
+
+    private Integer UnpackDeviceFileSystem()
+    {
+        System.out.println("UnpackDeviceFileSystem - Start");
+        Integer Response = 0;
+        publish("-= Unpacking Filesystem Image =-");
+        Thread.yield();
+
+        Response = exec(cmdUnpackfilesystem());
+        if (Response != 0)
+        {
+            showMessageDialog(null, "Failed to Download the Filesytem Image from the device\n"
+                    + "Verify your device is properly connected and in programming mode.",
+                    "Failed cmdGetfilesystem", JOptionPane.ERROR_MESSAGE);
+        }
+        System.out.println("UnpackDeviceFileSystem - End");
+        return Response;
+    }
+
+    private Integer CreateFileSystemImage()
+    {
+        Integer Response = 0;
 
         // Build Filesystem
         publish("-= Building Filesystem Image =-");
-        status = exec(cmdMkfilesystem());
-        if (status != 0)
+        Thread.yield();
+
+        Response = exec(cmdMkfilesystem());
+        if (Response != 0)
         {
             showMessageDialog(null, "Failed to make Filesytem Image",
                     "Failed mkfilesystem", JOptionPane.ERROR_MESSAGE);
         }
-        else
-        {
-            // Flash the images
-            if (flash)
-            {
-                publish("\n-= Programming ESP =-");
-                status = exec(cmdEsptoolErase());
-
-                status = exec(cmdEsptool());
-                if (status != 0)
-                {
-                    showMessageDialog(null, "Failed to program the ESP.\n"
-                            + "Verify your device is properly connected and in programming mode.",
-                            "Failed esptool", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        }
-
-        return state;
+        return Response;
     }
 
-    public List<String> cmdParseFileFystem(String DirName)
+    private Integer EraseDeviceFlash()
     {
-        List<String> list = new ArrayList<>();
+        Integer Response = 0;
+
+        publish("\n-= Erasing ESP Flash =-");
+        Thread.yield();
+
+        Response = exec(cmdEsptoolErase());
+        if (Response != 0)
+        {
+            showMessageDialog(null, "Failed to Erase ESP Device Flash\n"
+                    + "Verify your device is properly connected and in programming mode.",
+                    "Failed mkfilesystem", JOptionPane.ERROR_MESSAGE);
+        }
+        return Response;
+    }
+
+    private Integer UploadFwImages()
+    {
+        Integer Response = 0;
+
+        publish("\n-= Uploading Firmware =-");
+        Thread.yield();
+
+        Response = exec(cmdEsptool());
+        if (Response != 0)
+        {
+            showMessageDialog(null, "Failed to program the ESP.\n"
+                    + "Verify your device is properly connected and in programming mode.",
+                    "Failed esptool", JOptionPane.ERROR_MESSAGE);
+        }
+        return Response;
+    }
+
+    private Integer UploadFileSystemToDevice()
+    {
+        return 0;
+    }
+
+    private List<String> cmdUnpackfilesystem()
+    {
+        String DirName = ESPSFlashTool.deviceConfig.GetDownloadFsName();
+        List< String> list = new ArrayList<>();
         list.add(ESPSFlashTool.paths.getMkfilesystem());
         list.add("-b");
         list.add(ESPSFlashTool.board.filesystem.block);
@@ -222,7 +400,7 @@ class ImageTask extends SwingWorker<Integer, String>
         return list;
     }
 
-    public List<String> cmdGetfilesystem(String TargetFileName)
+    private List<String> cmdGetfilesystem()
     {
         List<String> list = new ArrayList<>();
 
@@ -251,7 +429,7 @@ class ImageTask extends SwingWorker<Integer, String>
             list.add("read_flash");
             list.add(ESPSFlashTool.board.filesystem.offset);
             list.add(ESPSFlashTool.board.filesystem.size);
-            list.add(TargetFileName);
+            list.add(ESPSFlashTool.deviceConfig.GetDownloadFsName() + ".bin");
         }
 
         return list;
@@ -273,95 +451,5 @@ class ImageTask extends SwingWorker<Integer, String>
         list.add(ESPSFlashTool.paths.getFwPath() + fsBin);
 
         return list;
-    }
-
-    public void process(java.util.List<String> messages)
-    {
-        for (String message : messages)
-        {
-            ESPSFlashTool.flashToolUI.appendTxtSystemOutput(message + "\n");
-        }
-    }
-
-    @Override
-    protected Integer doInBackground()
-    {
-        ESPSFlashTool.flashToolUI.setTxtSystemOutput(null);
-        ImageTask task = new ImageTask(true);
-        return task.UploadImages();
-    }
-
-    private void monitor()
-    {
-        if (ESPSFlashTool.port == null)
-        {
-            ESPSFlashTool.flashToolUI.appendTxtSystemOutput("No Port Defined");
-            return;
-        }
-
-        SerialPort serial = ESPSFlashTool.port.getPort();
-        if (serial == null)
-        {
-            ESPSFlashTool.flashToolUI.appendTxtSystemOutput("Desired Serial Port Not Found");
-            return;
-        }
-
-        serial.setComPortParameters(Integer.parseInt(ESPSFlashTool.ftconfig.getBaudrate()),
-                8, SerialPort.ONE_STOP_BIT, SerialPort.NO_PARITY
-        );
-
-        ESPSFlashTool.flashToolUI.setTxtSystemOutput("");
-        if (!serial.openPort())
-        {
-            ESPSFlashTool.flashToolUI.appendTxtSystemOutput("Failed to open serial port " + serial.getSystemPortName());
-        }
-        else
-        {
-            serial.addDataListener(new SerialPortDataListener()
-            {
-                @Override
-                public int getListeningEvents()
-                {
-                    return SerialPort.LISTENING_EVENT_DATA_AVAILABLE;
-                }
-
-                @Override
-                public void serialEvent(SerialPortEvent event)
-                {
-                    if (event.getEventType() != SerialPort.LISTENING_EVENT_DATA_AVAILABLE)
-                    {
-                        return;
-                    }
-                    byte[] data = new byte[serial.bytesAvailable()];
-                    serial.readBytes(data, data.length);
-                    ESPSFlashTool.flashToolUI.appendTxtSystemOutput(new String(data, StandardCharsets.US_ASCII));
-                }
-            });
-        }
-    }
-
-    public void done()
-    {
-        monitor();
-        if (status == 0)
-        {
-            if (flash)
-            {
-                ESPSFlashTool.flashToolUI.appendTxtSystemOutput("\n-= Programming Complete =-");
-            }
-            else
-            {
-                ESPSFlashTool.flashToolUI.appendTxtSystemOutput("\n-= Image Creation Complete =-");
-            }
-        }
-        else if (flash)
-        {
-            ESPSFlashTool.flashToolUI.appendTxtSystemOutput("\n*** PROGRAMMING FAILED ***");
-        }
-        else
-        {
-            ESPSFlashTool.flashToolUI.appendTxtSystemOutput("\n*** IMAGE CREATION FAILED ***");
-        }
-        ESPSFlashTool.flashToolUI.enableInterface();
     }
 }
