@@ -141,7 +141,7 @@ class DeviceConfig
     {
         boolean retval = true;
 
-        try (Writer fw = new FileWriter(ESPSFlashTool.paths.getFsPath() + DeviceConfigFileName))
+        try ( Writer fw = new FileWriter(ESPSFlashTool.paths.getFsPath() + DeviceConfigFileName))
         {
             Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
             if (null != DeviceConfigMap)
@@ -376,6 +376,22 @@ class DeviceConfig
     {
         boolean response = false;
         Object value = GetJsonValueByKey("ap_fallback");
+        if (null != value)
+        {
+            response = Boolean.valueOf(value.toString());
+        }
+        return response;
+    }
+
+    public void setReboot(boolean value)
+    {
+        SetJsonValueByKey("ap_reboot", value);
+    }
+
+    public boolean getReboot()
+    {
+        boolean response = false;
+        Object value = GetJsonValueByKey("ap_reboot");
         if (null != value)
         {
             response = Boolean.valueOf(value.toString());
