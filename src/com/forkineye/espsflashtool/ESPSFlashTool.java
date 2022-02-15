@@ -25,7 +25,7 @@ public class ESPSFlashTool
     public static Board board = new Board();
     public static ESPSSerialPort port = new ESPSSerialPort();
     public static DeviceConfig deviceConfig = new DeviceConfig();
-    public static ImageTask ftask = new ImageTask(true); // SwingWorker task to build and flash
+    // public static ImageTask ftask = new ImageTask(true); // SwingWorker task to build and flash
 
     public static void main(String[] args)
     {

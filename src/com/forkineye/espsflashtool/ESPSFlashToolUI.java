@@ -93,7 +93,6 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         //</editor-fold>
         // Netbeans init routine
         initComponents();
-
         setLocationRelativeTo(null);
 
         // Set release label
@@ -104,6 +103,13 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
                 new FileNameExtensionFilter("ESPS Firmware Update", "efu"));
         dlgSave.setSelectedFile(
                 new File("espixelstick.efu"));
+
+        if (0 == ESPSFlashTool.ftconfig.getBoards().size())
+        {
+            showMessageDialog(null, "No boards found in configuration file",
+                    "Bad configuration", JOptionPane.ERROR_MESSAGE);
+            System.exit(0);
+        }
 
         // Verify and Populate boards
         for (Board x : ESPSFlashTool.ftconfig.getBoards())
@@ -131,54 +137,55 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         monitor();
     }
 
-    private void populateConfigValues()
+    public void populateConfigValues()
     {
         // Populate config
         txtSSID.setText(ESPSFlashTool.deviceConfig.getSSID());
         txtPassphrase.setText(ESPSFlashTool.deviceConfig.getPassphrase());
         txtHostname.setText(ESPSFlashTool.deviceConfig.getHostname());
         txtDevID.setText(ESPSFlashTool.deviceConfig.getId());
+        CheckBoxApFallback.setSelected(ESPSFlashTool.deviceConfig.getAp_fallback());
     }
 
     private boolean serializeConfig()
     {
-        boolean retval = true;
         ESPSFlashTool.deviceConfig.setSSID(txtSSID.getText());
         ESPSFlashTool.deviceConfig.setPassphrase(txtPassphrase.getText());
         ESPSFlashTool.deviceConfig.setHostname(txtHostname.getText());
         ESPSFlashTool.deviceConfig.setId(txtDevID.getText());
+        ESPSFlashTool.deviceConfig.setAp_fallback(CheckBoxApFallback.isSelected());
 
         return ESPSFlashTool.deviceConfig.serializeConfig();
     }
 
     // execPath + EspPlatformPath +
-    private void monitor()
+    public void monitor()
     {
-        if (ESPSFlashTool.port == null)
+        System.out.println("monitor - Start");
+        do // once
         {
-            txtSerialOutput.append("No Port Defined");
-            return;
-        }
+            if (ESPSFlashTool.port == null)
+            {
+                txtSerialOutput.append("No Port Defined");
+                break;
+            }
 
-        SerialPort serial = ESPSFlashTool.port.getPort();
-        if (serial == null)
-        {
-            txtSerialOutput.append("Desired Serial Port Not Found");
-            return;
-        }
+            SerialPort serial = ESPSFlashTool.port.getPort();
+            if (serial == null)
+            {
+                txtSerialOutput.append("Desired Serial Port Not Found");
+                break;
+            }
 
-        serial.setComPortParameters(Integer.parseInt(ESPSFlashTool.ftconfig.getBaudrate()),
-                8, SerialPort.ONE_STOP_BIT, SerialPort.NO_PARITY
-        );
+            serial.setComPortParameters(Integer.parseInt(ESPSFlashTool.ftconfig.getBaudrate()),
+                    8, SerialPort.ONE_STOP_BIT, SerialPort.NO_PARITY
+            );
+            if (!serial.openPort())
+            {
+                txtSerialOutput.append("Failed to open serial port " + serial.getSystemPortName());
+                break;
+            }
 
-        txtSerialOutput.setText("");
-        if (!serial.openPort())
-        {
-            txtSerialOutput.append("Failed to open serial port " + serial.getSystemPortName());
-        }
-        else
-        {
-            ESPSFlashTool.deviceConfig.ProcessOnDeviceConfigFiles();
             serial.addDataListener(new SerialPortDataListener()
             {
                 @Override
@@ -197,15 +204,18 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
                     byte[] data = new byte[serial.bytesAvailable()];
                     serial.readBytes(data, data.length);
                     txtSerialOutput.append(new String(data, StandardCharsets.US_ASCII));
+                    txtSerialOutput.setCaretPosition(txtSerialOutput.getDocument().getLength());
                 }
             });
-        }
+        } while (false);
+        System.out.println("monitor - End");
     }
 
     private void disableInterface()
     {
         cboxPort.setEnabled(false);
         cboxFirmware.setEnabled(false);
+        CheckBoxApFallback.setEnabled(false);
         disableButtons();
     }
 
@@ -213,6 +223,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
     {
         cboxPort.setEnabled(true);
         cboxFirmware.setEnabled(true);
+        CheckBoxApFallback.setEnabled(true);
         enableButtons();
     }
 
@@ -220,12 +231,14 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
     {
         btnFlash.setEnabled(false);
         btnExport.setEnabled(false);
+        btnDownload.setEnabled(false);
     }
 
     private void enableButtons()
     {
         btnFlash.setEnabled(true);
         btnExport.setEnabled(true);
+        btnDownload.setEnabled(true);
     }
 
     public void setTxtSystemOutput(String message)
@@ -236,6 +249,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
     public void appendTxtSystemOutput(String message)
     {
         txtSystemOutput.append(message);
+        txtSystemOutput.setCaretPosition(txtSystemOutput.getDocument().getLength());
     }
 
     /**
@@ -244,7 +258,8 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
+    private void initComponents()
+    {
 
         dlgSave = new javax.swing.JFileChooser();
         txtPassphrase = new javax.swing.JTextField();
@@ -257,13 +272,14 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         txtSSID = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
-        btnFlash = new javax.swing.JButton();
-        btnExport = new javax.swing.JButton();
         jSplitPane1 = new javax.swing.JSplitPane();
         pnlSystem = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         txtSystemOutput = new javax.swing.JTextArea();
         jLabel7 = new javax.swing.JLabel();
+        btnFlash = new javax.swing.JButton();
+        btnExport = new javax.swing.JButton();
+        btnDownload = new javax.swing.JButton();
         pnlSerial = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         txtSerialOutput = new javax.swing.JTextArea();
@@ -272,6 +288,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         jLabel8 = new javax.swing.JLabel();
         lblRelease = new javax.swing.JLabel();
         filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0));
+        CheckBoxApFallback = new javax.swing.JCheckBox();
 
         dlgSave.setDialogType(javax.swing.JFileChooser.SAVE_DIALOG);
         dlgSave.setDialogTitle("Save Firmware Update");
@@ -282,8 +299,10 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         txtPassphrase.setToolTipText("Enter your AP Passphrase");
 
         cboxFirmware.setModel(modelBoard);
-        cboxFirmware.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+        cboxFirmware.addActionListener(new java.awt.event.ActionListener()
+        {
+            public void actionPerformed(java.awt.event.ActionEvent evt)
+            {
                 cboxFirmwareActionPerformed(evt);
             }
         });
@@ -295,8 +314,10 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         jLabel4.setText("Serial Port");
 
         cboxPort.setModel(modelPort);
-        cboxPort.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+        cboxPort.addActionListener(new java.awt.event.ActionListener()
+        {
+            public void actionPerformed(java.awt.event.ActionEvent evt)
+            {
                 cboxPortActionPerformed(evt);
             }
         });
@@ -309,26 +330,6 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
 
         jLabel1.setText("SSID");
 
-        btnFlash.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
-        btnFlash.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/forkineye/espsflashtool/upload.png"))); // NOI18N
-        btnFlash.setText("Upload");
-        btnFlash.setToolTipText("Program your ESPixelStick with current settings");
-        btnFlash.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnFlashActionPerformed(evt);
-            }
-        });
-
-        btnExport.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
-        btnExport.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/forkineye/espsflashtool/export.png"))); // NOI18N
-        btnExport.setText("Build EFU");
-        btnExport.setToolTipText("Builds an OTA update file");
-        btnExport.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnExportActionPerformed(evt);
-            }
-        });
-
         jSplitPane1.setBorder(null);
         jSplitPane1.setDividerLocation(200);
         jSplitPane1.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
@@ -340,22 +341,71 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
 
         jLabel7.setText("Status");
 
+        btnFlash.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        btnFlash.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/forkineye/espsflashtool/upload.png"))); // NOI18N
+        btnFlash.setText("Upload");
+        btnFlash.setToolTipText("Program your ESPixelStick with current settings");
+        btnFlash.addActionListener(new java.awt.event.ActionListener()
+        {
+            public void actionPerformed(java.awt.event.ActionEvent evt)
+            {
+                btnFlashActionPerformed(evt);
+            }
+        });
+
+        btnExport.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        btnExport.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/forkineye/espsflashtool/export.png"))); // NOI18N
+        btnExport.setText("Build EFU");
+        btnExport.setToolTipText("Builds an OTA update file");
+        btnExport.addActionListener(new java.awt.event.ActionListener()
+        {
+            public void actionPerformed(java.awt.event.ActionEvent evt)
+            {
+                btnExportActionPerformed(evt);
+            }
+        });
+
+        btnDownload.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
+        btnDownload.setText("Download");
+        btnDownload.addActionListener(new java.awt.event.ActionListener()
+        {
+            public void actionPerformed(java.awt.event.ActionEvent evt)
+            {
+                btnDownloadActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout pnlSystemLayout = new javax.swing.GroupLayout(pnlSystem);
         pnlSystem.setLayout(pnlSystemLayout);
         pnlSystemLayout.setHorizontalGroup(
             pnlSystemLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 501, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)
             .addGroup(pnlSystemLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel7)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(pnlSystemLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(pnlSystemLayout.createSequentialGroup()
+                        .addComponent(btnDownload)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnFlash, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnExport))
+                    .addGroup(pnlSystemLayout.createSequentialGroup()
+                        .addComponent(jLabel7)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         pnlSystemLayout.setVerticalGroup(
             pnlSystemLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlSystemLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(pnlSystemLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnFlash)
+                    .addComponent(btnExport)
+                    .addComponent(btnDownload))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel7)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 180, Short.MAX_VALUE))
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE))
         );
 
         jSplitPane1.setTopComponent(pnlSystem);
@@ -374,7 +424,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         pnlSerial.setLayout(pnlSerialLayout);
         pnlSerialLayout.setHorizontalGroup(
             pnlSerialLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 501, Short.MAX_VALUE)
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)
             .addGroup(pnlSerialLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel6)
@@ -385,14 +435,16 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
             .addGroup(pnlSerialLayout.createSequentialGroup()
                 .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 139, Short.MAX_VALUE))
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 119, Short.MAX_VALUE))
         );
 
         jSplitPane1.setBottomComponent(pnlSerial);
 
         txtHostname.setToolTipText("Auto-generated if left blank");
-        txtHostname.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyReleased(java.awt.event.KeyEvent evt) {
+        txtHostname.addKeyListener(new java.awt.event.KeyAdapter()
+        {
+            public void keyReleased(java.awt.event.KeyEvent evt)
+            {
                 txtHostnameKeyReleased(evt);
             }
         });
@@ -403,47 +455,64 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         lblRelease.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblRelease.setText("* Release Information Not Found *");
 
+        CheckBoxApFallback.setSelected(true);
+        CheckBoxApFallback.setText("AP Fallback");
+        CheckBoxApFallback.setToolTipText("Select to fallback to AP mode when no network AP can be found.");
+        CheckBoxApFallback.setHorizontalTextPosition(javax.swing.SwingConstants.LEADING);
+        CheckBoxApFallback.addActionListener(new java.awt.event.ActionListener()
+        {
+            public void actionPerformed(java.awt.event.ActionEvent evt)
+            {
+                CheckBoxApFallbackActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(16, 16, 16)
-                .addComponent(btnFlash, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btnExport)
-                .addGap(10, 10, 10))
-            .addComponent(jSplitPane1, javax.swing.GroupLayout.Alignment.TRAILING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(layout.createSequentialGroup()
-                            .addGap(7, 7, 7)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING)
-                                .addComponent(jLabel8, javax.swing.GroupLayout.Alignment.TRAILING)))
-                        .addComponent(jLabel2, javax.swing.GroupLayout.Alignment.TRAILING))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(6, 6, 6)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jLabel3)
-                            .addComponent(jLabel4)
-                            .addComponent(jLabel5))))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(cboxPort, javax.swing.GroupLayout.Alignment.CENTER, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(cboxFirmware, javax.swing.GroupLayout.Alignment.CENTER, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(txtDevID, javax.swing.GroupLayout.Alignment.CENTER)
-                    .addComponent(txtHostname, javax.swing.GroupLayout.Alignment.CENTER)
-                    .addComponent(txtPassphrase, javax.swing.GroupLayout.Alignment.CENTER)
-                    .addComponent(txtSSID, javax.swing.GroupLayout.Alignment.CENTER)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(77, 77, 77)
-                        .addComponent(filler1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addContainerGap())
+                .addComponent(jSplitPane1))
             .addComponent(lblRelease, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addGroup(layout.createSequentialGroup()
+                                    .addGap(16, 16, 16)
+                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(jLabel8, javax.swing.GroupLayout.Alignment.TRAILING)))
+                                .addComponent(jLabel2, javax.swing.GroupLayout.Alignment.TRAILING))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(21, 21, 21)
+                                .addComponent(jLabel5)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(txtDevID, javax.swing.GroupLayout.Alignment.CENTER)
+                            .addComponent(txtHostname, javax.swing.GroupLayout.Alignment.CENTER)
+                            .addComponent(txtPassphrase, javax.swing.GroupLayout.Alignment.CENTER)
+                            .addComponent(txtSSID, javax.swing.GroupLayout.Alignment.CENTER)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(77, 77, 77)
+                                .addComponent(filler1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(0, 0, Short.MAX_VALUE))))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(10, 10, 10)
+                        .addComponent(CheckBoxApFallback, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, 62, Short.MAX_VALUE)
+                            .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(cboxFirmware, 0, 425, Short.MAX_VALUE)
+                            .addComponent(cboxPort, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -468,6 +537,8 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
                     .addComponent(txtDevID, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel5))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(CheckBoxApFallback, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cboxFirmware, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel3))
@@ -476,44 +547,43 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
                     .addComponent(cboxPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel4))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btnExport)
-                    .addComponent(btnFlash))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jSplitPane1)
                 .addContainerGap())
         );
+
+        CheckBoxApFallback.getAccessibleContext().setAccessibleName(" AP Fallback");
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void cboxPortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboxPortActionPerformed
-        ESPSFlashTool.port = cboxPort.getItemAt(cboxPort.getSelectedIndex());
-        if (ESPSFlashTool.port == null)
+
+        do // once
         {
-            return;
-        }
-        if (lastPort != null)
-        {
-            lastPort.closePort();
-        }
-        lastPort = ESPSFlashTool.port.getPort();
-        ESPSFlashTool.deviceConfig.ProcessOnDeviceConfigFiles();
-        populateConfigValues();
-        monitor();
+            ESPSFlashTool.port = cboxPort.getItemAt(cboxPort.getSelectedIndex());
+            if (ESPSFlashTool.port == null)
+            {
+                break;
+            }
+            if (lastPort != null)
+            {
+                lastPort.closePort();
+            }
+            lastPort = ESPSFlashTool.port.getPort();
+            monitor();
+        } while (false);
     }//GEN-LAST:event_cboxPortActionPerformed
 
     private void cboxFirmwareActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboxFirmwareActionPerformed
         ESPSFlashTool.board = cboxFirmware.getItemAt(cboxFirmware.getSelectedIndex());
-        ESPSFlashTool.deviceConfig.ProcessOnDeviceConfigFiles();
-        populateConfigValues();
     }//GEN-LAST:event_cboxFirmwareActionPerformed
 
     private void btnFlashActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFlashActionPerformed
         if (serializeConfig())
         {
             disableInterface();
-            ESPSFlashTool.ftask.UploadImages();
+            ImageTask ftask = new ImageTask(ImageTask.ImageTaskActionToPerform.CREATE_AND_UPLOAD_ALL); // SwingWorker task to build and flash
+            ftask.execute();
         }
     }//GEN-LAST:event_btnFlashActionPerformed
 
@@ -525,12 +595,13 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
                 if (serializeConfig())
                 {
                     disableInterface();
-                    ESPSFlashTool.ftask.UploadImages();
 
+                    ImageTask ftask = new ImageTask(ImageTask.ImageTaskActionToPerform.ERASE_FLASH); // SwingWorker task to build and flash
+                    ftask.execute();
                     // Block until filesystem image is built
                     try
                     {
-                        ESPSFlashTool.ftask.get();
+                        ftask.get();
                     }
                     catch (InterruptedException | ExecutionException ex)
                     {
@@ -565,7 +636,20 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         }
     }//GEN-LAST:event_txtHostnameKeyReleased
 
+    private void btnDownloadActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_btnDownloadActionPerformed
+    {//GEN-HEADEREND:event_btnDownloadActionPerformed
+        txtSystemOutput.setText("Downloading Configuration Files from the ESP\n");
+        ESPSFlashTool.deviceConfig.ProcessOnDeviceConfigFiles();
+    }//GEN-LAST:event_btnDownloadActionPerformed
+
+    private void CheckBoxApFallbackActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_CheckBoxApFallbackActionPerformed
+    {//GEN-HEADEREND:event_CheckBoxApFallbackActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_CheckBoxApFallbackActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JCheckBox CheckBoxApFallback;
+    private javax.swing.JButton btnDownload;
     private javax.swing.JButton btnExport;
     private javax.swing.JButton btnFlash;
     private javax.swing.JComboBox<Board> cboxFirmware;
