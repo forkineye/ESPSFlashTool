@@ -63,6 +63,7 @@ class FTConfig
         // System.out.println("    baudrate: " + configData.baudrate);
         if (configData.boards != null)
         {
+            configData.boards.add(0, new Board());
             ESPSFlashTool.board = configData.boards.get(0);
             /*
             for (Board currentBoard : configData.boards)
