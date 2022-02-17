@@ -37,6 +37,7 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
         DOWNLOAD_FILESYSTEM,
         UNPACK_FILESYSTEM,
         CREATE_FILESYSTEM,
+        MAKEEFU,
         UPLOAD_FILESYSTEM,
         UPLOAD_FIRMWARE,
         CREATE_AND_UPLOAD_ALL
@@ -111,6 +112,24 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
                 status = CreateFileSystemImage();
                 break;
             }
+            case MAKEEFU:
+            {
+                status = CreateFileSystemImage();
+                try
+                {
+                    UpdateBuilder.build(
+                            ESPSFlashTool.paths.getFwPath() + ESPSFlashTool.board.getAppbin(),
+                            ESPSFlashTool.paths.getFwPath() + ESPSFlashTool.paths.getFsBin(),
+                            ESPSFlashTool.flashToolUI.getEfuTarget());
+                }
+                catch (IOException ex)
+                {
+                    showMessageDialog(null, "Failed to build firmware update\n"
+                            + ex.getMessage(), "Failed EFU Build", JOptionPane.ERROR_MESSAGE);
+                }
+
+                break;
+            }
             case UPLOAD_FILESYSTEM:
             {
                 System.out.println("doInBackground - UPLOAD_FILESYSTEM");
@@ -179,7 +198,6 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
             publish(outCommand);
             ESPSFlashTool.flashToolUI.appendTxtSystemOutput(outCommand + "\n");
 
-            Thread.yield();
             System.out.println(outCommand);
 
             try
@@ -196,8 +214,6 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
                     publish(s);
                     ESPSFlashTool.flashToolUI.appendTxtSystemOutput(s + "\n");
                     System.out.println(s);
-
-                    Thread.yield();
                 }
 
                 if (!isCancelled())
@@ -206,7 +222,6 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
                 }
 
                 publish("Done");
-                Thread.yield();
 
                 p.getInputStream().close();
                 p.getOutputStream().close();
@@ -230,7 +245,6 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
         System.out.println("DownloadDeviceFileSystem - Start");
         Integer Response = 0;
         publish("-= Retreiving Filesystem Image =-");
-        Thread.yield();
 
         Response = exec(cmdGetfilesystem());
         if (Response != 0)
@@ -248,7 +262,6 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
         System.out.println("UnpackDeviceFileSystem - Start");
         Integer Response = 0;
         publish("-= Unpacking Filesystem Image =-");
-        Thread.yield();
 
         Response = exec(cmdUnpackfilesystem());
         if (Response != 0)
@@ -267,7 +280,6 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
 
         // Build Filesystem
         publish("-= Building Filesystem Image =-");
-        Thread.yield();
 
         Response = exec(cmdMkfilesystem());
         if (Response != 0)
@@ -283,7 +295,6 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
         Integer Response = 0;
 
         publish("\n-= Erasing ESP Flash =-");
-        Thread.yield();
 
         Response = exec(cmdEsptoolErase());
         if (Response != 0)
@@ -300,7 +311,6 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
         Integer Response = 0;
 
         publish("\n-= Uploading Firmware =-");
-        Thread.yield();
 
         Response = exec(cmdEsptool());
         if (Response != 0)
