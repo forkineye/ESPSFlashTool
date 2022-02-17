@@ -58,6 +58,10 @@ public class UpdateBuilder
 
     public static void build(String sketch, String spiffs, String target) throws IOException
     {
+        System.out.println("sketch:" + sketch);
+        System.out.println("spiffs:" + spiffs);
+        System.out.println("target:" + target);
+
         DataInputStream dsSketch = new DataInputStream(new FileInputStream(sketch));
         DataInputStream dsSpiffs = new DataInputStream(new FileInputStream(spiffs));
         DataOutputStream dsTarget = new DataOutputStream(new FileOutputStream(target));
@@ -72,11 +76,11 @@ public class UpdateBuilder
             32bit size
             {x bytes of data}
          */
-        // Write header
+        ESPSFlashTool.flashToolUI.appendTxtSystemOutput("Write EFU header\n");
         dsTarget.write(SIGNATURE, 0, SIGNATURE.length);
         dsTarget.writeShort(VERSION);
 
-        // Write Sketch Image
+        ESPSFlashTool.flashToolUI.appendTxtSystemOutput("Write Sketch Image\n");
         int szSketch = (int) new File(sketch).length();
         dsTarget.writeShort(RecordType.SKETCH_IMAGE.getValue());
         dsTarget.writeInt(szSketch);
@@ -85,7 +89,7 @@ public class UpdateBuilder
             dsTarget.write(dsSketch.read());
         }
 
-        // Write SPIFFS Image
+        ESPSFlashTool.flashToolUI.appendTxtSystemOutput("Write SPIFFS/LittelFs Image\n");
         int szSpiffs = (int) new File(spiffs).length();
         dsTarget.writeShort(RecordType.SPIFFS_IMAGE.getValue());
         dsTarget.writeInt(szSpiffs);
@@ -93,7 +97,7 @@ public class UpdateBuilder
         {
             dsTarget.write(dsSpiffs.read());
         }
-
+        ESPSFlashTool.flashToolUI.appendTxtSystemOutput("Build EFU Image Done\n");
         dsSketch.close();
         dsSpiffs.close();
         dsTarget.close();
