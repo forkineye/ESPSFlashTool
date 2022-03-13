@@ -399,4 +399,51 @@ class DeviceConfig
         return response;
     }
 
+    public void setIP(String value)
+    {
+        SetJsonValueByKey("ip", value);
+    }
+
+    public String getIP()
+    {
+        String response = "";
+        Object value = GetJsonValueByKey("ip");
+        if (null != value)
+        {
+            response = value.toString();
+        }
+        return response;
+    }
+
+    public void setMask(String value)
+    {
+        SetJsonValueByKey("netmask", value);
+    }
+
+    public String getMask()
+    {
+        String response = "";
+        Object value = GetJsonValueByKey("netmask");
+        if (null != value)
+        {
+            response = value.toString();
+        }
+        return response;
+    }
+
+    public void setGatewayIp(String value)
+    {
+        SetJsonValueByKey("gateway", value);
+    }
+
+    public String getGatewayIp()
+    {
+        String response = "";
+        Object value = GetJsonValueByKey("gateway");
+        if (null != value)
+        {
+            response = value.toString();
+        }
+        return response;
+    }
 } // class DeviceConfig
