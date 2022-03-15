@@ -16,13 +16,16 @@
 package com.forkineye.espsflashtool;
 
 import com.google.gson.*;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Map;
 import javax.swing.JOptionPane;
 
@@ -31,6 +34,8 @@ class DeviceConfig
 {
 
     private final String DeviceConfigFileName = "config.json";    // ESPixelStick config.json
+    private final String DeviceInputConfigFileName = "input_config.json";    // ESPixelStick config.json
+    private final String DeviceOutputConfigFileName = "output_config.json";    // ESPixelStick config.json
     private Map<String, Object> LocalConfigMap;
     private Map<String, Object> DeviceConfigMap;
 
@@ -106,16 +111,14 @@ class DeviceConfig
             }
 
             // download and parse the device file system
-            System.out.println("GetFsFromDevice - Start");
-            ImageTask ftask = new ImageTask(ImageTask.ImageTaskActionToPerform.DOWNLOAD_FILESYSTEM); // SwingWorker task to build and flash
-            ftask.execute();
-
+            GetFsFromDevice();
         } while (false);
 
         System.out.println("ProcessOnDeviceConfigFiles - Done");
     } // GetDeviceConfigFiles
 
-    private void GetFsFromDevice(String TargetFsFileName)
+    // download and parse the device file system
+    private void GetFsFromDevice()
     {
         System.out.println("GetFsFromDevice - Start");
         ImageTask ftask = new ImageTask(ImageTask.ImageTaskActionToPerform.DOWNLOAD_FILESYSTEM); // SwingWorker task to build and flash
@@ -151,6 +154,34 @@ class DeviceConfig
             else if (null != LocalConfigMap)
             {
                 gson.toJson(LocalConfigMap, fw);
+            }
+
+            // does input_config.json exist?
+            String SourceFsDirName = GetDownloadFsName() + "/";
+
+            File InputConfigFile = new File(SourceFsDirName + DeviceInputConfigFileName);
+            // System.out.println("InputConfigFile: " + InputConfigFile.toPath());
+
+            if (InputConfigFile.exists())
+            {
+                File FileInputConfigFileDestination = new File(ESPSFlashTool.paths.getFsPath() + DeviceInputConfigFileName);
+                System.out.println("FileInputConfigFileDestination: " + FileInputConfigFileDestination.toPath());
+
+                // copy it to the FS area
+                Files.copy(InputConfigFile.toPath(), FileInputConfigFileDestination.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            // does output_config.json exist?
+            File OutputConfigFile = new File(SourceFsDirName + DeviceOutputConfigFileName);
+            // System.out.println("OutputConfigFile: " + OutputConfigFile.toPath());
+
+            if (OutputConfigFile.exists())
+            {
+                File FileOutputConfigFileDestination = new File(ESPSFlashTool.paths.getFsPath() + DeviceOutputConfigFileName);
+                // System.out.println("FileOutputConfigFileDestination: " + FileOutputConfigFileDestination.toPath());
+
+                // copy it to the FS area
+                Files.copy(OutputConfigFile.toPath(), FileOutputConfigFileDestination.toPath(), StandardCopyOption.REPLACE_EXISTING);
             }
         }
         catch (IOException ex)
