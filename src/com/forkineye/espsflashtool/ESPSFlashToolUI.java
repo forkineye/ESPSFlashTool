@@ -19,6 +19,8 @@ import com.fazecast.jSerialComm.*;
 import java.awt.Color;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.DefaultComboBoxModel;
@@ -218,7 +220,11 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
                     }
                     byte[] data = new byte[serial.bytesAvailable()];
                     serial.readBytes(data, data.length);
-                    txtSerialOutput.append(new String(data, StandardCharsets.US_ASCII));
+                    LocalDateTime LocalTimeStamp = LocalDateTime.now();
+                    DateTimeFormatter TimeStampFormater = DateTimeFormatter.ofPattern("HH:mm:ss");
+                    String formattedtime = LocalTimeStamp.format(TimeStampFormater);
+                    String Line = new String(data, StandardCharsets.US_ASCII).replace("\n", "\n" + formattedtime + ": ");
+                    txtSerialOutput.append(Line);
                     txtSerialOutput.setCaretPosition(txtSerialOutput.getDocument().getLength());
                 }
             });
