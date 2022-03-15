@@ -49,6 +49,29 @@
             }
         },
         {
+            "name": "ESP01-S",
+            "description": "Generic ESP01S builds",
+            "chip": "esp8266",
+            "appbin": "esp8266/esp01s-app.bin",
+            "esptool": {
+                "baudrate": "460800",
+                "options": "--before default_reset --after hard_reset",
+                "flashcmd": "write_flash"
+            },
+            "binfiles": [
+                {
+                    "name": "esp8266/esp01s-app.bin",
+                    "offset": "0x0"
+                }
+            ],
+            "filesystem": {
+                "page": "256",
+                "block": "8192",
+                "size": "2072576",
+                "offset": "0x200000"
+            }
+        },
+        {
             "name": "D1 Mini Mhetesp32minikit",
             "description": "D1 Mini Mhetesp32minikit module with PSRAM support for DIY builds",
             "chip": "esp32",
@@ -224,10 +247,10 @@
             }
         },
         {
-            "name": "ESP32 CAM",
-            "description": "ESP32 CAM for DIY builds",
+            "name": "ESP32 QuinLED QUAD Eth",
+            "description": "ESP32 QuinLED QUAD for DIY builds",
             "chip": "esp32",
-            "appbin": "esp32/esp32_cam-app.bin",
+            "appbin": "esp32/esp32_quinled_quad_eth-app.bin",
             "esptool": {
                 "baudrate": "460800",
                 "options": "--before default_reset --after hard_reset",
@@ -235,11 +258,11 @@
             },
             "binfiles": [
                 {
-                    "name": "esp32/esp32_cam-bootloader.bin",
+                    "name": "esp32/esp32_quinled_quad_eth-bootloader.bin",
                     "offset": "0x1000"
                 },
                 {
-                    "name": "esp32/esp32_cam-partitions.bin",
+                    "name": "esp32/esp32_quinled_quad_eth-partitions.bin",
                     "offset": "0x8000"
                 },
                 {
@@ -247,7 +270,112 @@
                     "offset": "0xe000"
                 },
                 {
-                    "name": "esp32/esp32_cam-app.bin",
+                    "name": "esp32/esp32_quinled_quad_eth-app.bin",
+                    "offset": "0x10000"
+                }
+            ],
+            "filesystem": {
+                "page": "256",
+                "block": "4096",
+                "size": "0x50000",
+                "offset": "0x3B0000"
+            }
+        },
+        {
+            "name": "ESP32 QuinLED QUAD",
+            "description": "ESP32 QuinLED QUAD for DIY builds",
+            "chip": "esp32",
+            "appbin": "esp32/esp32_quinled_quad-app.bin",
+            "esptool": {
+                "baudrate": "460800",
+                "options": "--before default_reset --after hard_reset",
+                "flashcmd": "write_flash -z"
+            },
+            "binfiles": [
+                {
+                    "name": "esp32/esp32_quinled_quad-bootloader.bin",
+                    "offset": "0x1000"
+                },
+                {
+                    "name": "esp32/esp32_quinled_quad-partitions.bin",
+                    "offset": "0x8000"
+                },
+                {
+                    "name": "esp32/boot_app0.bin",
+                    "offset": "0xe000"
+                },
+                {
+                    "name": "esp32/esp32_quinled_quad-app.bin",
+                    "offset": "0x10000"
+                }
+            ],
+            "filesystem": {
+                "page": "256",
+                "block": "4096",
+                "size": "0x50000",
+                "offset": "0x3B0000"
+            }
+        },
+        {
+            "name": "ESP32 QuinLED UNO Eth",
+            "description": "ESP32 QuinLED UNO for DIY builds",
+            "chip": "esp32",
+            "appbin": "esp32/esp32_quinled_uno_eth-app.bin",
+            "esptool": {
+                "baudrate": "460800",
+                "options": "--before default_reset --after hard_reset",
+                "flashcmd": "write_flash -z"
+            },
+            "binfiles": [
+                {
+                    "name": "esp32/esp32_quinled_uno_eth-bootloader.bin",
+                    "offset": "0x1000"
+                },
+                {
+                    "name": "esp32/esp32_quinled_uno_eth-partitions.bin",
+                    "offset": "0x8000"
+                },
+                {
+                    "name": "esp32/boot_app0.bin",
+                    "offset": "0xe000"
+                },
+                {
+                    "name": "esp32/esp32_quinled_uno_eth-app.bin",
+                    "offset": "0x10000"
+                }
+            ],
+            "filesystem": {
+                "page": "256",
+                "block": "4096",
+                "size": "0x50000",
+                "offset": "0x3B0000"
+            }
+        },
+        {
+            "name": "ESP32 QuinLED UNO",
+            "description": "ESP32 QuinLED UNO for DIY builds",
+            "chip": "esp32",
+            "appbin": "esp32/esp32_quinled_uno-app.bin",
+            "esptool": {
+                "baudrate": "460800",
+                "options": "--before default_reset --after hard_reset",
+                "flashcmd": "write_flash -z"
+            },
+            "binfiles": [
+                {
+                    "name": "esp32/esp32_quinled_uno-bootloader.bin",
+                    "offset": "0x1000"
+                },
+                {
+                    "name": "esp32/esp32_quinled_uno-partitions.bin",
+                    "offset": "0x8000"
+                },
+                {
+                    "name": "esp32/boot_app0.bin",
+                    "offset": "0xe000"
+                },
+                {
+                    "name": "esp32/esp32_quinled_uno-app.bin",
                     "offset": "0x10000"
                 }
             ],
@@ -283,6 +411,41 @@
                 },
                 {
                     "name": "esp32/esp32_ttgo_t8-app.bin",
+                    "offset": "0x10000"
+                }
+            ],
+            "filesystem": {
+                "page": "256",
+                "block": "4096",
+                "size": "0x50000",
+                "offset": "0x3B0000"
+            }
+        },
+        {
+            "name": "ESP32 WT32 ETH01",
+            "description": "ESP32 for DIY builds",
+            "chip": "esp32",
+            "appbin": "esp32/esp32_wt32eth01-app.bin",
+            "esptool": {
+                "baudrate": "460800",
+                "options": "--before default_reset --after hard_reset",
+                "flashcmd": "write_flash -z"
+            },
+            "binfiles": [
+                {
+                    "name": "esp32/esp32_wt32eth01-bootloader.bin",
+                    "offset": "0x1000"
+                },
+                {
+                    "name": "esp32/esp32_wt32eth01-partitions.bin",
+                    "offset": "0x8000"
+                },
+                {
+                    "name": "esp32/boot_app0.bin",
+                    "offset": "0xe000"
+                },
+                {
+                    "name": "esp32/esp32_wt32eth01-app.bin",
                     "offset": "0x10000"
                 }
             ],
