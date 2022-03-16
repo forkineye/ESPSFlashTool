@@ -23,8 +23,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Map;
 import javax.swing.JOptionPane;
@@ -33,14 +31,15 @@ import javax.swing.JOptionPane;
 class DeviceConfig
 {
 
-    private final String DeviceConfigFileName = "config.json";    // ESPixelStick config.json
-    private final String DeviceInputConfigFileName = "input_config.json";    // ESPixelStick config.json
-    private final String DeviceOutputConfigFileName = "output_config.json";    // ESPixelStick config.json
+    private final String DeviceConfigFileName = "config.json";
+    private final String DeviceInputConfigFileName = "input_config.json";
+    private final String DeviceOutputConfigFileName = "output_config.json";
     private Map<String, Object> LocalConfigMap;
     private Map<String, Object> DeviceConfigMap;
 
     public void init()
     {
+        InitDownloadedConfigFiles();
         ProcessLocalDeviceConfigFile();
     } // init
 
@@ -72,8 +71,8 @@ class DeviceConfig
     {
         ESPSFlashTool.flashToolUI.monitor();
 
-        String TargetFileName = GetDownloadFsName();
-        Path fsPath = Paths.get(TargetFileName + ".bin");
+        String TargetFileName = GetDownloadedFsPath();
+
 
         // parse it
         Gson gson = new Gson();
@@ -157,7 +156,7 @@ class DeviceConfig
             }
 
             // does input_config.json exist?
-            String SourceFsDirName = GetDownloadFsName() + "/";
+            String SourceFsDirName = GetDownloadedFsPath() + "/";
 
             File InputConfigFile = new File(SourceFsDirName + DeviceInputConfigFileName);
             // System.out.println("InputConfigFile: " + InputConfigFile.toPath());
@@ -194,11 +193,36 @@ class DeviceConfig
         return retval;
     }
 
-    public String GetDownloadFsName()
+    public String GetDownloadedFsName()
     {
-        String TargetFileName = ESPSFlashTool.board.name + "_" + ESPSFlashTool.board.filesystem.offset + "_" + ESPSFlashTool.board.filesystem.size;
-        TargetFileName = TargetFileName.replace(" ", "_");
-        return TargetFileName;
+        String DownloadedFsDir = ESPSFlashTool.board.name + "_" + ESPSFlashTool.board.filesystem.offset + "_" + ESPSFlashTool.board.filesystem.size;
+        return DownloadedFsDir.replace(" ", "_");
+    }
+
+    public String GetDownloadedFsPath()
+    {
+        return ESPSFlashTool.paths.getDownloadPath() + GetDownloadedFsName();
+    }
+
+    public void InitDownloadedConfigFiles()
+    {
+        deleteDir(new File(ESPSFlashTool.paths.getDownloadPath()));
+
+        // recreate the root directory.
+        new File(ESPSFlashTool.paths.getDownloadPath()).mkdirs();
+    }
+
+    private void deleteDir(File dir)
+    {
+        File[] files = dir.listFiles();
+        if (files != null)
+        {
+            for (final File file : files)
+            {
+                deleteDir(file);
+            }
+        }
+        dir.delete();
     }
 
     private Object GetJsonValueByKey(String key)

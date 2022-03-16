@@ -31,6 +31,7 @@ public class ESPSPaths
     private final String fsPath = "fs/";         // Path for filesystem
     private final String fsBin = "filesystem.bin";      // Filesystem Image
     private final String fwPath = "firmware/";          // Path for firmware binaries
+    private final String downloadPath = "downloaded/"; // path for downloaded FS objects
 
     private boolean isWindows = false;
 
@@ -132,6 +133,11 @@ public class ESPSPaths
     public String getFwPath()
     {
         return fwPath;
+    }
+
+    public String getDownloadPath()
+    {
+        return downloadPath;
     }
 
     public String getOsName()
