@@ -110,6 +110,8 @@
                           </Group>
                           <Group type="102" attributes="0">
                               <Component id="jLabelSerialOutput" min="-2" pref="74" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" pref="136" max="-2" attributes="0"/>
+                              <Component id="jButtonSaveLogs" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="32767" attributes="0"/>
                               <Component id="jButtonClearSerialOutput" min="-2" max="-2" attributes="0"/>
                           </Group>
@@ -147,6 +149,7 @@
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="jLabelSerialOutput" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="jButtonClearSerialOutput" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="jButtonSaveLogs" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="jScrollPane2" min="-2" pref="175" max="-2" attributes="0"/>
@@ -587,6 +590,18 @@
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonClearSerialOutputActionPerformed"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JButton" name="jButtonSaveLogs">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Save Logs"/>
+        <Property name="actionCommand" type="java.lang.String" value="jButtonSaveLogs"/>
+      </Properties>
+      <AccessibilityProperties>
+        <Property name="AccessibleContext.accessibleName" type="java.lang.String" value="jButtonSaveLogs"/>
+      </AccessibilityProperties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButtonSaveLogsActionPerformed"/>
       </Events>
     </Component>
   </SubComponents>

@@ -370,6 +370,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         jLabelSerialOutput = new javax.swing.JLabel();
         jButtonClearSystemOutput = new javax.swing.JButton();
         jButtonClearSerialOutput = new javax.swing.JButton();
+        jButtonSaveLogs = new javax.swing.JButton();
 
         dlgSave.setDialogType(javax.swing.JFileChooser.SAVE_DIALOG);
         dlgSave.setDialogTitle("Save Firmware Update");
@@ -691,6 +692,16 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
             }
         });
 
+        jButtonSaveLogs.setText("Save Logs");
+        jButtonSaveLogs.setActionCommand("jButtonSaveLogs");
+        jButtonSaveLogs.addActionListener(new java.awt.event.ActionListener()
+        {
+            public void actionPerformed(java.awt.event.ActionEvent evt)
+            {
+                jButtonSaveLogsActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -730,6 +741,8 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
                                 .addComponent(jButtonClearSystemOutput))
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jLabelSerialOutput, javax.swing.GroupLayout.PREFERRED_SIZE, 74, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(136, 136, 136)
+                                .addComponent(jButtonSaveLogs)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(jButtonClearSerialOutput)))
                         .addContainerGap())))
@@ -758,16 +771,16 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabelSerialOutput)
-                    .addComponent(jButtonClearSerialOutput))
+                    .addComponent(jButtonClearSerialOutput)
+                    .addComponent(jButtonSaveLogs))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18))
         );
 
         btnFlash.getAccessibleContext().setAccessibleName("Upload Image Set");
-        jLabelSystemOutput.getAccessibleContext().setAccessibleName("System Output");
-        jLabelSystemOutput.getAccessibleContext().setAccessibleDescription("");
         jButtonClearSystemOutput.getAccessibleContext().setAccessibleName("jButtonClearSystemOutput");
+        jButtonSaveLogs.getAccessibleContext().setAccessibleName("jButtonSaveLogs");
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -870,6 +883,28 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         txtSerialOutput.setText("");
     }//GEN-LAST:event_jButtonClearSerialOutputActionPerformed
 
+    private void jButtonSaveLogsActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_jButtonSaveLogsActionPerformed
+    {//GEN-HEADEREND:event_jButtonSaveLogsActionPerformed
+        final JFileChooser LogFileChooser = new JFileChooser();
+        LogFileChooser.setCurrentDirectory(new File(ESPSFlashTool.paths.getFsPath() + "/.."));
+        int returnVal = LogFileChooser.showSaveDialog(this);
+        if (returnVal == JFileChooser.APPROVE_OPTION)
+        {
+            File LogFilePath = LogFileChooser.getSelectedFile();
+            try ( FileWriter LogFileWriter = new FileWriter(LogFilePath, false))
+            {
+                LogFileWriter.write("System Output: \n\n");
+                LogFileWriter.write(txtSystemOutput.getText());
+                LogFileWriter.write("\n\nSerial Output: \n\n");
+                LogFileWriter.write(txtSerialOutput.getText());
+            }
+            catch (IOException e)
+            {
+                txtSystemOutput.append("ERROR writing to log file: " + e.toString());
+            }
+        }
+    }//GEN-LAST:event_jButtonSaveLogsActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JCheckBox CheckBoxApFallback;
     private javax.swing.JCheckBox CheckBoxReboot;
@@ -883,6 +918,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
     private javax.swing.Box.Filler filler1;
     private javax.swing.JButton jButtonClearSerialOutput;
     private javax.swing.JButton jButtonClearSystemOutput;
+    private javax.swing.JButton jButtonSaveLogs;
     private javax.swing.JFormattedTextField jFormattedTextField1;
     private javax.swing.JFrame jFrame1;
     private javax.swing.JFrame jFrame2;
