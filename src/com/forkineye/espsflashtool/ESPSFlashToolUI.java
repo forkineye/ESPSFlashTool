@@ -799,6 +799,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
                 lastPort.closePort();
             }
             lastPort = ESPSFlashTool.port.getPort();
+
             monitor();
         } while (false);
     }//GEN-LAST:event_cboxPortActionPerformed

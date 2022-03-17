@@ -329,7 +329,7 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
 
     private List<String> cmdUnpackfilesystem()
     {
-        String DirName = ESPSFlashTool.deviceConfig.GetDownloadFsName();
+        String DirName = ESPSFlashTool.deviceConfig.GetDownloadedFsPath();
         List< String> list = new ArrayList<>();
         list.add(ESPSFlashTool.paths.getMkfilesystem());
         list.add("-b");
@@ -439,7 +439,7 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
             list.add("read_flash");
             list.add(ESPSFlashTool.board.filesystem.offset);
             list.add(ESPSFlashTool.board.filesystem.size);
-            list.add(ESPSFlashTool.deviceConfig.GetDownloadFsName() + ".bin");
+            list.add(ESPSFlashTool.deviceConfig.GetDownloadedFsPath() + ".bin");
         }
 
         return list;
