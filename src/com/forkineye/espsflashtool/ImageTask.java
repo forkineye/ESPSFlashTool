@@ -38,7 +38,6 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
         UNPACK_FILESYSTEM,
         CREATE_FILESYSTEM,
         MAKEEFU,
-        UPLOAD_FILESYSTEM,
         UPLOAD_FIRMWARE,
         CREATE_AND_UPLOAD_ALL
     }
@@ -50,6 +49,7 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
 
     public ImageTask(ImageTaskActionToPerform action)
     {
+        System.out.println("ImageTask Created");
         flashAction = action;
         EnsureSerialPortIsOff();
     }
@@ -73,8 +73,7 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
         for (String message : messages)
         {
             ESPSFlashTool.flashToolUI.appendTxtSystemOutput(message + "\n");
-            // System.out.println(message);
-
+            System.out.println(message);
         }
     }
 
@@ -130,12 +129,7 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
 
                 break;
             }
-            case UPLOAD_FILESYSTEM:
-            {
-                System.out.println("doInBackground - UPLOAD_FILESYSTEM");
-                status = UploadFileSystemToDevice();
-                break;
-            }
+
             case UPLOAD_FIRMWARE:
             {
                 System.out.println("doInBackground - UPLOAD_FIRMWARE");
@@ -147,7 +141,6 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
                 System.out.println("doInBackground - CREATE_AND_UPLOAD_ALL");
                 status = CreateFileSystemImage();
                 status |= EraseDeviceFlash();
-                status |= UploadFileSystemToDevice();
                 status |= UploadFwImages();
                 break;
             }
@@ -195,10 +188,7 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
             {
                 outCommand = (outCommand + " " + opt);
             }
-            publish(outCommand);
-            ESPSFlashTool.flashToolUI.appendTxtSystemOutput(outCommand + "\n");
-
-            System.out.println(outCommand);
+            publish("Command: " + outCommand);
 
             try
             {
@@ -212,8 +202,6 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
                 while ((s = stdout.readLine()) != null && !isCancelled())
                 {
                     publish(s);
-                    ESPSFlashTool.flashToolUI.appendTxtSystemOutput(s + "\n");
-                    System.out.println(s);
                 }
 
                 if (!isCancelled())
@@ -221,7 +209,7 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
                     state = p.waitFor();
                 }
 
-                publish("Done");
+                publish("Command: " + outCommand + " - Done");
 
                 p.getInputStream().close();
                 p.getOutputStream().close();
@@ -253,7 +241,7 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
                     + "Verify your device is properly connected and in programming mode.",
                     "Failed cmdGetfilesystem", JOptionPane.ERROR_MESSAGE);
         }
-        System.out.println("DownloadDeviceFileSystem - End");
+        publish("DownloadDeviceFileSystem - End");
         return Response;
     }
 
@@ -270,7 +258,7 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
                     + "Verify your device is properly connected and in programming mode.",
                     "Failed cmdGetfilesystem", JOptionPane.ERROR_MESSAGE);
         }
-        System.out.println("UnpackDeviceFileSystem - End");
+        publish("UnpackDeviceFileSystem - End");
         return Response;
     }
 
@@ -287,6 +275,7 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
             showMessageDialog(null, "Failed to make Filesytem Image",
                     "Failed mkfilesystem", JOptionPane.ERROR_MESSAGE);
         }
+        publish("-= Building Filesystem Image - Done =-");
         return Response;
     }
 
@@ -303,6 +292,8 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
                     + "Verify your device is properly connected and in programming mode.",
                     "Failed mkfilesystem", JOptionPane.ERROR_MESSAGE);
         }
+        publish("\n-= Erasing ESP Flash - Done =-");
+
         return Response;
     }
 
@@ -319,12 +310,8 @@ class ImageTask extends SwingWorker<ImageTaskActionToPerform, String>
                     + "Verify your device is properly connected and in programming mode.",
                     "Failed esptool", JOptionPane.ERROR_MESSAGE);
         }
+        publish("\n-= Uploading Firmware - Done =-");
         return Response;
-    }
-
-    private Integer UploadFileSystemToDevice()
-    {
-        return 0;
     }
 
     private List<String> cmdUnpackfilesystem()
