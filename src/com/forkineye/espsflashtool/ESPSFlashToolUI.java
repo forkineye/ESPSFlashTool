@@ -16,7 +16,10 @@
 package com.forkineye.espsflashtool;
 
 import com.fazecast.jSerialComm.*;
+import com.formdev.flatlaf.FlatLightLaf;
 import java.awt.Color;
+import java.awt.Image;
+import java.awt.Toolkit;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -27,6 +30,7 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import static javax.swing.JOptionPane.showMessageDialog;
+import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class ESPSFlashToolUI extends javax.swing.JFrame
@@ -55,54 +59,19 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
     }
 
     public void init()
-    {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-     * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
-         */
-        try
-        {
-            /*
-        for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-            if ("Nimbus".equals(info.getName())) {
-                javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                break;
-            }
-        }*/
-
-            // Set system look and feel
-            javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getSystemLookAndFeelClassName());
-
+    {       
+        // Set Flat Look and Feel
+        try {
+            UIManager.setLookAndFeel( new FlatLightLaf() );
+        } catch( Exception ex ) {
+            System.err.println( "Failed to initialize LaF" );
         }
-        catch (ClassNotFoundException ex)
-        {
-            java.util.logging.Logger.getLogger(ESPSFlashToolUI.class
-                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
-
-        }
-        catch (InstantiationException ex)
-        {
-            java.util.logging.Logger.getLogger(ESPSFlashToolUI.class
-                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
-
-        }
-        catch (IllegalAccessException ex)
-        {
-            java.util.logging.Logger.getLogger(ESPSFlashToolUI.class
-                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
-
-        }
-        catch (javax.swing.UnsupportedLookAndFeelException ex)
-        {
-            java.util.logging.Logger.getLogger(ESPSFlashToolUI.class
-                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
+        
         // Netbeans init routine
         initComponents();
         setLocationRelativeTo(null);
 
+        
         // jFormattedTextFieldIpAddress
         // Set release label
         lblRelease.setText(ESPSFlashTool.ftconfig.getRelease());
@@ -142,6 +111,9 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         }
         populateConfigValues();
 
+        // Trigger state changes
+        CheckBoxUseDhcpItemStateChanged(null);
+        
         // Start serial monitor
         monitor();
     }
@@ -327,8 +299,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
      */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents()
-    {
+    private void initComponents() {
 
         dlgSave = new javax.swing.JFileChooser();
         jFormattedTextField1 = new javax.swing.JFormattedTextField();
@@ -336,7 +307,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         jFrame2 = new javax.swing.JFrame();
         lblRelease = new javax.swing.JLabel();
         filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0));
-        jPanel1 = new javax.swing.JPanel();
+        jPanelHardware = new javax.swing.JPanel();
         jLabel4 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
         cboxPort = new javax.swing.JComboBox<>();
@@ -359,17 +330,21 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         jTextFieldIpAddress = new javax.swing.JTextField();
         jTextFieldIpMask = new javax.swing.JTextField();
         jTextFieldGatewayIpAddress = new javax.swing.JTextField();
-        btnDownload = new javax.swing.JButton();
-        btnFlash = new javax.swing.JButton();
+        jPanelButtons = new javax.swing.JPanel();
         btnExport = new javax.swing.JButton();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        txtSystemOutput = new javax.swing.JTextArea();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        txtSerialOutput = new javax.swing.JTextArea();
+        btnFlash = new javax.swing.JButton();
+        btnDownload = new javax.swing.JButton();
+        jSplitPane1 = new javax.swing.JSplitPane();
+        jPanelSystemOutput = new javax.swing.JPanel();
         jLabelSystemOutput = new javax.swing.JLabel();
-        jLabelSerialOutput = new javax.swing.JLabel();
         jButtonClearSystemOutput = new javax.swing.JButton();
+        jScrollPaneSystemOutput = new javax.swing.JScrollPane();
+        txtSystemOutput = new javax.swing.JTextArea();
+        jPanelSerialOutput = new javax.swing.JPanel();
+        jLabelSerialOutput = new javax.swing.JLabel();
         jButtonClearSerialOutput = new javax.swing.JButton();
+        jScrollPaneSerialOutput = new javax.swing.JScrollPane();
+        txtSerialOutput = new javax.swing.JTextArea();
         jButtonSaveLogs = new javax.swing.JButton();
 
         dlgSave.setDialogType(javax.swing.JFileChooser.SAVE_DIALOG);
@@ -401,6 +376,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("ESPixelStick Flash Tool");
+        setIconImage(Toolkit.getDefaultToolkit().getImage(ESPSFlashToolUI.class.getResource("Forkineye-icon32.png")));
 
         lblRelease.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
         lblRelease.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -411,58 +387,55 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         jLabel3.setText("Hardware");
 
         cboxPort.setModel(modelPort);
-        cboxPort.addActionListener(new java.awt.event.ActionListener()
-        {
-            public void actionPerformed(java.awt.event.ActionEvent evt)
-            {
+        cboxPort.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cboxPortActionPerformed(evt);
             }
         });
 
         cboxFirmware.setModel(modelBoard);
-        cboxFirmware.addActionListener(new java.awt.event.ActionListener()
-        {
-            public void actionPerformed(java.awt.event.ActionEvent evt)
-            {
+        cboxFirmware.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cboxFirmwareActionPerformed(evt);
             }
         });
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(cboxFirmware, 0, 405, Short.MAX_VALUE)
-                    .addComponent(cboxPort, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        javax.swing.GroupLayout jPanelHardwareLayout = new javax.swing.GroupLayout(jPanelHardware);
+        jPanelHardware.setLayout(jPanelHardwareLayout);
+        jPanelHardwareLayout.setHorizontalGroup(
+            jPanelHardwareLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelHardwareLayout.createSequentialGroup()
+                .addGap(14, 14, 14)
+                .addGroup(jPanelHardwareLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel3)
+                    .addComponent(jLabel4))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanelHardwareLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(cboxPort, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(cboxFirmware, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+        jPanelHardwareLayout.setVerticalGroup(
+            jPanelHardwareLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelHardwareLayout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(jPanelHardwareLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
                     .addComponent(cboxFirmware, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel4)
-                    .addComponent(cboxPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelHardwareLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(cboxPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel4))
                 .addContainerGap())
         );
 
-        CheckBoxApFallback.setSelected(true);
         CheckBoxApFallback.setText("AP Fallback");
         CheckBoxApFallback.setToolTipText("Select to fallback to AP mode when no network AP can be found.");
         CheckBoxApFallback.setHorizontalTextPosition(javax.swing.SwingConstants.LEADING);
 
+        CheckBoxReboot.setSelected(true);
         CheckBoxReboot.setText("Reboot");
+        CheckBoxReboot.setToolTipText("Reboot when WiFi fails to connect.");
         CheckBoxReboot.setActionCommand("CheckBoxReboot");
         CheckBoxReboot.setFocusTraversalPolicyProvider(true);
         CheckBoxReboot.setHorizontalTextPosition(javax.swing.SwingConstants.LEFT);
@@ -474,6 +447,11 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         CheckBoxUseDhcp.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         CheckBoxUseDhcp.setHorizontalTextPosition(javax.swing.SwingConstants.LEFT);
         CheckBoxUseDhcp.setVerifyInputWhenFocusTarget(false);
+        CheckBoxUseDhcp.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                CheckBoxUseDhcpItemStateChanged(evt);
+            }
+        });
 
         jLabel5.setText("Device ID");
 
@@ -482,10 +460,8 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         jLabel8.setText("Hostname");
 
         txtHostname.setToolTipText("Auto-generated if left blank");
-        txtHostname.addKeyListener(new java.awt.event.KeyAdapter()
-        {
-            public void keyReleased(java.awt.event.KeyEvent evt)
-            {
+        txtHostname.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
                 txtHostnameKeyReleased(evt);
             }
         });
@@ -500,57 +476,45 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
 
         jLabelIpAddress.setText("IP Address");
 
-        jLabelIpMask.setText("IP Mask");
+        jLabelIpMask.setText("Subnet Mask");
 
-        jLabelGatewayIpAddress.setText("Gateway IP Address");
+        jLabelGatewayIpAddress.setText("Gateway");
 
         jTextFieldIpAddress.setText("000.000.000.000");
         jTextFieldIpAddress.setToolTipText("");
-        jTextFieldIpAddress.addFocusListener(new java.awt.event.FocusAdapter()
-        {
-            public void focusLost(java.awt.event.FocusEvent evt)
-            {
+        jTextFieldIpAddress.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent evt) {
                 IpAddressFocusLost(evt);
             }
         });
-        jTextFieldIpAddress.addKeyListener(new java.awt.event.KeyAdapter()
-        {
-            public void keyReleased(java.awt.event.KeyEvent evt)
-            {
+        jTextFieldIpAddress.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
                 IpAddressKeyReleased(evt);
             }
         });
 
         jTextFieldIpMask.setText("000.000.000.000");
         jTextFieldIpMask.setToolTipText("");
-        jTextFieldIpMask.addFocusListener(new java.awt.event.FocusAdapter()
-        {
-            public void focusLost(java.awt.event.FocusEvent evt)
-            {
+        jTextFieldIpMask.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent evt) {
                 IpAddressFocusLost(evt);
             }
         });
-        jTextFieldIpMask.addKeyListener(new java.awt.event.KeyAdapter()
-        {
-            public void keyReleased(java.awt.event.KeyEvent evt)
-            {
+        jTextFieldIpMask.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
                 IpAddressKeyReleased(evt);
             }
         });
 
         jTextFieldGatewayIpAddress.setText("000.000.000.000");
         jTextFieldGatewayIpAddress.setToolTipText("");
-        jTextFieldGatewayIpAddress.addFocusListener(new java.awt.event.FocusAdapter()
-        {
-            public void focusLost(java.awt.event.FocusEvent evt)
-            {
+        jTextFieldGatewayIpAddress.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusLost(java.awt.event.FocusEvent evt) {
                 IpAddressFocusLost(evt);
             }
         });
-        jTextFieldGatewayIpAddress.addKeyListener(new java.awt.event.KeyAdapter()
-        {
-            public void keyReleased(java.awt.event.KeyEvent evt)
-            {
+        jTextFieldGatewayIpAddress.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
                 IpAddressKeyReleased(evt);
             }
         });
@@ -561,143 +525,225 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
             jPanelDeviceConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelDeviceConfigLayout.createSequentialGroup()
                 .addContainerGap()
+                .addGroup(jPanelDeviceConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel8)
+                    .addComponent(jLabel5)
+                    .addComponent(jLabel2)
+                    .addComponent(jLabelISSID))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanelDeviceConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanelDeviceConfigLayout.createSequentialGroup()
                         .addGroup(jPanelDeviceConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jLabel8)
-                            .addComponent(jLabel5)
-                            .addComponent(jLabel2)
-                            .addComponent(jLabelISSID))
+                            .addComponent(txtPassphrase, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(txtDevID, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(txtSSID)
+                            .addComponent(txtHostname, javax.swing.GroupLayout.Alignment.LEADING))
                         .addGap(18, 18, 18)
                         .addGroup(jPanelDeviceConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(txtDevID)
-                            .addComponent(txtHostname)
-                            .addComponent(txtPassphrase)
-                            .addComponent(txtSSID)))
-                    .addGroup(jPanelDeviceConfigLayout.createSequentialGroup()
-                        .addGroup(jPanelDeviceConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanelDeviceConfigLayout.createSequentialGroup()
-                                .addComponent(CheckBoxApFallback, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(CheckBoxReboot))
-                            .addComponent(jLabelIpAddress, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(jLabelIpMask, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jLabelGatewayIpAddress, javax.swing.GroupLayout.Alignment.TRAILING))
+                            .addComponent(jLabelGatewayIpAddress, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabelIpAddress, javax.swing.GroupLayout.Alignment.TRAILING))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanelDeviceConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(CheckBoxUseDhcp)
-                            .addComponent(jTextFieldIpAddress, javax.swing.GroupLayout.DEFAULT_SIZE, 101, Short.MAX_VALUE)
-                            .addComponent(jTextFieldIpMask)
-                            .addComponent(jTextFieldGatewayIpAddress))
-                        .addContainerGap(232, Short.MAX_VALUE))))
+                        .addGroup(jPanelDeviceConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jTextFieldIpAddress, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 101, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jTextFieldIpMask, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 101, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jTextFieldGatewayIpAddress, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 101, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(CheckBoxUseDhcp)))
+                    .addGroup(jPanelDeviceConfigLayout.createSequentialGroup()
+                        .addComponent(CheckBoxApFallback)
+                        .addGap(13, 13, 13)
+                        .addComponent(CheckBoxReboot)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         jPanelDeviceConfigLayout.setVerticalGroup(
             jPanelDeviceConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelDeviceConfigLayout.createSequentialGroup()
-                .addGap(23, 23, 23)
+                .addContainerGap()
                 .addGroup(jPanelDeviceConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtSSID, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabelISSID))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                    .addComponent(jLabelISSID)
+                    .addComponent(CheckBoxUseDhcp))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelDeviceConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
-                    .addComponent(txtPassphrase, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanelDeviceConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel8)
-                    .addComponent(txtHostname, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanelDeviceConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel5)
-                    .addComponent(txtDevID, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addGroup(jPanelDeviceConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(CheckBoxApFallback, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(CheckBoxReboot)
-                    .addComponent(CheckBoxUseDhcp))
-                .addGap(11, 11, 11)
-                .addGroup(jPanelDeviceConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtPassphrase, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabelIpAddress)
                     .addComponent(jTextFieldIpAddress, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelDeviceConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel8)
+                    .addComponent(txtHostname, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabelIpMask)
                     .addComponent(jTextFieldIpMask, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelDeviceConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel5)
+                    .addComponent(txtDevID, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabelGatewayIpAddress)
                     .addComponent(jTextFieldGatewayIpAddress, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap())
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanelDeviceConfigLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(CheckBoxApFallback, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(CheckBoxReboot)))
         );
 
         CheckBoxApFallback.getAccessibleContext().setAccessibleName(" AP Fallback");
 
-        btnDownload.setText("Download Config");
-        btnDownload.addActionListener(new java.awt.event.ActionListener()
-        {
-            public void actionPerformed(java.awt.event.ActionEvent evt)
-            {
-                btnDownloadActionPerformed(evt);
-            }
-        });
-
-        btnFlash.setText("Upload Images");
-        btnFlash.addActionListener(new java.awt.event.ActionListener()
-        {
-            public void actionPerformed(java.awt.event.ActionEvent evt)
-            {
-                btnFlashActionPerformed(evt);
-            }
-        });
-
+        btnExport.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        btnExport.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/forkineye/espsflashtool/save_FILL0_wght400_GRAD0_opsz48.png"))); // NOI18N
         btnExport.setText("Build EFU");
-        btnExport.addActionListener(new java.awt.event.ActionListener()
-        {
-            public void actionPerformed(java.awt.event.ActionEvent evt)
-            {
+        btnExport.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnExportActionPerformed(evt);
             }
         });
 
-        txtSystemOutput.setColumns(20);
-        txtSystemOutput.setRows(5);
-        jScrollPane1.setViewportView(txtSystemOutput);
+        btnFlash.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        btnFlash.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/forkineye/espsflashtool/upload_FILL0_wght400_GRAD0_opsz48.png"))); // NOI18N
+        btnFlash.setText("Flash Device");
+        btnFlash.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnFlashActionPerformed(evt);
+            }
+        });
 
-        txtSerialOutput.setColumns(20);
-        txtSerialOutput.setRows(5);
-        jScrollPane2.setViewportView(txtSerialOutput);
+        btnDownload.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        btnDownload.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/forkineye/espsflashtool/download_FILL0_wght400_GRAD0_opsz48.png"))); // NOI18N
+        btnDownload.setText("Download Config");
+        btnDownload.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDownloadActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanelButtonsLayout = new javax.swing.GroupLayout(jPanelButtons);
+        jPanelButtons.setLayout(jPanelButtonsLayout);
+        jPanelButtonsLayout.setHorizontalGroup(
+            jPanelButtonsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelButtonsLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(btnFlash, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btnDownload)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btnExport, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jPanelButtonsLayout.setVerticalGroup(
+            jPanelButtonsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelButtonsLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelButtonsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanelButtonsLayout.createSequentialGroup()
+                        .addGap(1, 1, 1)
+                        .addComponent(btnFlash, javax.swing.GroupLayout.PREFERRED_SIZE, 46, Short.MAX_VALUE))
+                    .addGroup(jPanelButtonsLayout.createSequentialGroup()
+                        .addGroup(jPanelButtonsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(btnDownload, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnExport, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
+
+        btnFlash.getAccessibleContext().setAccessibleName("Upload Image Set");
+
+        jSplitPane1.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
 
         jLabelSystemOutput.setText("System Output");
         jLabelSystemOutput.setToolTipText("");
 
-        jLabelSerialOutput.setText("Serial Output");
-
         jButtonClearSystemOutput.setText("Clear");
         jButtonClearSystemOutput.setActionCommand("jButtonClearSystemOutput");
-        jButtonClearSystemOutput.addActionListener(new java.awt.event.ActionListener()
-        {
-            public void actionPerformed(java.awt.event.ActionEvent evt)
-            {
+        jButtonClearSystemOutput.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonClearSystemOutputActionPerformed(evt);
             }
         });
 
+        jScrollPaneSystemOutput.setMinimumSize(new java.awt.Dimension(100, 100));
+
+        txtSystemOutput.setColumns(20);
+        txtSystemOutput.setRows(5);
+        jScrollPaneSystemOutput.setViewportView(txtSystemOutput);
+
+        javax.swing.GroupLayout jPanelSystemOutputLayout = new javax.swing.GroupLayout(jPanelSystemOutput);
+        jPanelSystemOutput.setLayout(jPanelSystemOutputLayout);
+        jPanelSystemOutputLayout.setHorizontalGroup(
+            jPanelSystemOutputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelSystemOutputLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelSystemOutputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPaneSystemOutput, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(jPanelSystemOutputLayout.createSequentialGroup()
+                        .addComponent(jLabelSystemOutput)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jButtonClearSystemOutput)))
+                .addContainerGap())
+        );
+        jPanelSystemOutputLayout.setVerticalGroup(
+            jPanelSystemOutputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelSystemOutputLayout.createSequentialGroup()
+                .addGap(4, 4, 4)
+                .addGroup(jPanelSystemOutputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabelSystemOutput)
+                    .addComponent(jButtonClearSystemOutput))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPaneSystemOutput, javax.swing.GroupLayout.DEFAULT_SIZE, 100, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+
+        jButtonClearSystemOutput.getAccessibleContext().setAccessibleName("jButtonClearSystemOutput");
+
+        jSplitPane1.setLeftComponent(jPanelSystemOutput);
+
+        jLabelSerialOutput.setText("Serial Output");
+
         jButtonClearSerialOutput.setText("Clear");
         jButtonClearSerialOutput.setActionCommand("jButtonClearSerialOutput");
-        jButtonClearSerialOutput.addActionListener(new java.awt.event.ActionListener()
-        {
-            public void actionPerformed(java.awt.event.ActionEvent evt)
-            {
+        jButtonClearSerialOutput.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonClearSerialOutputActionPerformed(evt);
             }
         });
 
+        jScrollPaneSerialOutput.setMinimumSize(new java.awt.Dimension(100, 100));
+
+        txtSerialOutput.setColumns(20);
+        txtSerialOutput.setRows(5);
+        jScrollPaneSerialOutput.setViewportView(txtSerialOutput);
+
+        javax.swing.GroupLayout jPanelSerialOutputLayout = new javax.swing.GroupLayout(jPanelSerialOutput);
+        jPanelSerialOutput.setLayout(jPanelSerialOutputLayout);
+        jPanelSerialOutputLayout.setHorizontalGroup(
+            jPanelSerialOutputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelSerialOutputLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelSerialOutputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPaneSerialOutput, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelSerialOutputLayout.createSequentialGroup()
+                        .addComponent(jLabelSerialOutput)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jButtonClearSerialOutput)))
+                .addContainerGap())
+        );
+        jPanelSerialOutputLayout.setVerticalGroup(
+            jPanelSerialOutputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelSerialOutputLayout.createSequentialGroup()
+                .addGap(5, 5, 5)
+                .addGroup(jPanelSerialOutputLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabelSerialOutput)
+                    .addComponent(jButtonClearSerialOutput))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPaneSerialOutput, javax.swing.GroupLayout.DEFAULT_SIZE, 115, Short.MAX_VALUE))
+        );
+
+        jSplitPane1.setBottomComponent(jPanelSerialOutput);
+
         jButtonSaveLogs.setText("Save Logs");
         jButtonSaveLogs.setActionCommand("jButtonSaveLogs");
-        jButtonSaveLogs.addActionListener(new java.awt.event.ActionListener()
-        {
-            public void actionPerformed(java.awt.event.ActionEvent evt)
-            {
+        jButtonSaveLogs.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonSaveLogsActionPerformed(evt);
             }
         });
@@ -706,107 +752,43 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                        .addGap(20, 20, 20)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jPanelDeviceConfig, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                    .addComponent(lblRelease, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                        .addGap(144, 144, 144)
-                        .addComponent(filler1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addContainerGap())
+            .addComponent(lblRelease, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanelDeviceConfig, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanelHardware, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanelButtons, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(btnDownload, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnFlash, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(btnExport, javax.swing.GroupLayout.PREFERRED_SIZE, 158, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(10, 10, 10))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(jScrollPane1)
-                        .addContainerGap())
-                    .addComponent(jScrollPane2)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabelSystemOutput, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(jButtonClearSystemOutput))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabelSerialOutput, javax.swing.GroupLayout.PREFERRED_SIZE, 74, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(136, 136, 136)
-                                .addComponent(jButtonSaveLogs)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(jButtonClearSerialOutput)))
-                        .addContainerGap())))
+                .addGap(144, 144, 144)
+                .addComponent(filler1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, Short.MAX_VALUE))
+            .addComponent(jSplitPane1)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jButtonSaveLogs)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addComponent(filler1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(lblRelease)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanelDeviceConfig, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jPanelHardware, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnDownload)
-                    .addComponent(btnFlash)
-                    .addComponent(btnExport))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabelSystemOutput)
-                    .addComponent(jButtonClearSystemOutput))
-                .addGap(8, 8, 8)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 181, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabelSerialOutput)
-                    .addComponent(jButtonClearSerialOutput)
-                    .addComponent(jButtonSaveLogs))
+                .addComponent(jPanelButtons, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18))
+                .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 291, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonSaveLogs)
+                .addContainerGap())
         );
 
-        btnFlash.getAccessibleContext().setAccessibleName("Upload Image Set");
-        jButtonClearSystemOutput.getAccessibleContext().setAccessibleName("jButtonClearSystemOutput");
         jButtonSaveLogs.getAccessibleContext().setAccessibleName("jButtonSaveLogs");
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-
-    private void cboxPortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboxPortActionPerformed
-
-        do // once
-        {
-            ESPSFlashTool.port = cboxPort.getItemAt(cboxPort.getSelectedIndex());
-            if (ESPSFlashTool.port == null)
-            {
-                break;
-            }
-            if (lastPort != null)
-            {
-                lastPort.closePort();
-            }
-            lastPort = ESPSFlashTool.port.getPort();
-
-            monitor();
-        } while (false);
-    }//GEN-LAST:event_cboxPortActionPerformed
-
-    private void cboxFirmwareActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboxFirmwareActionPerformed
-        ESPSFlashTool.board = cboxFirmware.getItemAt(cboxFirmware.getSelectedIndex());
-    }//GEN-LAST:event_cboxFirmwareActionPerformed
 
     private void txtHostnameKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtHostnameKeyReleased
         if (txtHostname.getText().length() == 0 | txtHostname.getText().matches(HOSTNAME_PATTERN))
@@ -906,6 +888,41 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         }
     }//GEN-LAST:event_jButtonSaveLogsActionPerformed
 
+    private void cboxFirmwareActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboxFirmwareActionPerformed
+        ESPSFlashTool.board = cboxFirmware.getItemAt(cboxFirmware.getSelectedIndex());
+    }//GEN-LAST:event_cboxFirmwareActionPerformed
+
+    private void cboxPortActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboxPortActionPerformed
+
+        do // once
+        {
+            ESPSFlashTool.port = cboxPort.getItemAt(cboxPort.getSelectedIndex());
+            if (ESPSFlashTool.port == null)
+            {
+                break;
+            }
+            if (lastPort != null)
+            {
+                lastPort.closePort();
+            }
+            lastPort = ESPSFlashTool.port.getPort();
+
+            monitor();
+        } while (false);
+    }//GEN-LAST:event_cboxPortActionPerformed
+
+    private void CheckBoxUseDhcpItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_CheckBoxUseDhcpItemStateChanged
+       if (CheckBoxUseDhcp.isSelected()) {
+            jTextFieldIpAddress.setEnabled(false);
+            jTextFieldIpMask.setEnabled(false);
+            jTextFieldGatewayIpAddress.setEnabled(false);
+        } else {
+            jTextFieldIpAddress.setEnabled(true);
+            jTextFieldIpMask.setEnabled(true);
+            jTextFieldGatewayIpAddress.setEnabled(true);
+        } 
+    }//GEN-LAST:event_CheckBoxUseDhcpItemStateChanged
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JCheckBox CheckBoxApFallback;
     private javax.swing.JCheckBox CheckBoxReboot;
@@ -934,10 +951,14 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
     private javax.swing.JLabel jLabelIpMask;
     private javax.swing.JLabel jLabelSerialOutput;
     private javax.swing.JLabel jLabelSystemOutput;
-    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanelButtons;
     private javax.swing.JPanel jPanelDeviceConfig;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JPanel jPanelHardware;
+    private javax.swing.JPanel jPanelSerialOutput;
+    private javax.swing.JPanel jPanelSystemOutput;
+    private javax.swing.JScrollPane jScrollPaneSerialOutput;
+    private javax.swing.JScrollPane jScrollPaneSystemOutput;
+    private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JTextField jTextFieldGatewayIpAddress;
     private javax.swing.JTextField jTextFieldIpAddress;
     private javax.swing.JTextField jTextFieldIpMask;
