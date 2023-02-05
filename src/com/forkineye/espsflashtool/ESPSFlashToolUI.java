@@ -886,7 +886,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
             File LogFilePath = LogFileChooser.getSelectedFile();
             try ( FileWriter LogFileWriter = new FileWriter(LogFilePath, false))
             {
-                LogFileWriter.write("ESPSFlashTool Version: " + properties.get( "application.version" ) );
+                LogFileWriter.write("ESPSFlashTool Version: " + properties.get( "application.version" ) + "\n\n" );
                 LogFileWriter.write("System Output: \n\n");
                 LogFileWriter.write(txtSystemOutput.getText());
                 LogFileWriter.write("\n\nSerial Output: \n\n");
