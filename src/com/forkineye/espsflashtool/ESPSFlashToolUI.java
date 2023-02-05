@@ -24,6 +24,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.DefaultComboBoxModel;
@@ -51,6 +52,8 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
 
     private SerialPort lastPort;
 
+    private Properties properties = new Properties();
+
     /**
      * Creates new form ESPSFlashToolUI
      */
@@ -65,6 +68,13 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
             UIManager.setLookAndFeel( new FlatLightLaf() );
         } catch( Exception ex ) {
             System.err.println( "Failed to initialize LaF" );
+        }
+
+        try {
+            properties.load( Thread.currentThread().getContextClassLoader().getResourceAsStream( "com/forkineye/espsflashtool/espsflashtool.properties" ) );
+            System.out.println("     Version: " + properties.get( "application.version" ) );
+        } catch( Exception ex ) {
+            System.err.println( "Failed to load properties" );
         }
         
         // Netbeans init routine
@@ -375,7 +385,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         );
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("ESPixelStick Flash Tool");
+        setTitle("ESPixelStick Flash Tool - " + properties.get( "application.version" ) );
         setIconImage(Toolkit.getDefaultToolkit().getImage(ESPSFlashToolUI.class.getResource("Forkineye-icon32.png")));
 
         lblRelease.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
@@ -876,6 +886,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
             File LogFilePath = LogFileChooser.getSelectedFile();
             try ( FileWriter LogFileWriter = new FileWriter(LogFilePath, false))
             {
+                LogFileWriter.write("ESPSFlashTool Version: " + properties.get( "application.version" ) );
                 LogFileWriter.write("System Output: \n\n");
                 LogFileWriter.write(txtSystemOutput.getText());
                 LogFileWriter.write("\n\nSerial Output: \n\n");

@@ -10,6 +10,30 @@
 <project name="ESPSFlashTool" default="default" basedir=".">
     <description>Builds, tests, and runs the project ESPSFlashTool.</description>
     <import file="nbproject/build-impl.xml"/>
+
+    <target name="-pre-compile">
+        <tstamp>
+            <format property="build.date" pattern="yyyyMMdd" />
+        </tstamp>
+
+        <exec executable="git" outputproperty="git.revision">
+            <arg value="log" />
+            <arg value="-1" />
+            <arg value="--pretty=format:%h" />
+        </exec>
+
+        <property name="application.version"  value="${build.date}-${git.revision}"/>
+
+        <manifest file="MANIFEST.MF">
+            <attribute name="Version" value="${application.version}" />
+        </manifest>
+
+        <propertyfile file="src/com/forkineye/espsflashtool/espsflashtool.properties">
+            <entry key="build.date" value="${build.date}" />
+            <entry key="git.revision" value="${git.revision}" />
+            <entry key="application.version" value="${application.version}" />
+        </propertyfile>
+    </target>
     
     <!-- Copy data contents to dist =-->
     <target name="-post-compile">
