@@ -127,6 +127,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         txtDevID.setText(ESPSFlashTool.deviceConfig.getId());
         CheckBoxApFallback.setSelected(ESPSFlashTool.deviceConfig.getAp_fallback());
         CheckBoxReboot.setSelected(ESPSFlashTool.deviceConfig.getReboot());
+        CheckBoxUseDhcp.setSelected(ESPSFlashTool.deviceConfig.getDHCP());
         jTextFieldIpAddress.setText(ESPSFlashTool.deviceConfig.getIP());
         jTextFieldIpMask.setText(ESPSFlashTool.deviceConfig.getMask());
         jTextFieldGatewayIpAddress.setText(ESPSFlashTool.deviceConfig.getGatewayIp());
@@ -140,6 +141,7 @@ public class ESPSFlashToolUI extends javax.swing.JFrame
         ESPSFlashTool.deviceConfig.setId(txtDevID.getText());
         ESPSFlashTool.deviceConfig.setAp_fallback(CheckBoxApFallback.isSelected());
         ESPSFlashTool.deviceConfig.setReboot(CheckBoxReboot.isSelected());
+        ESPSFlashTool.deviceConfig.setDHCP(CheckBoxUseDhcp.isSelected());
         ESPSFlashTool.deviceConfig.setIP(jTextFieldIpAddress.getText());
         ESPSFlashTool.deviceConfig.setMask(jTextFieldIpMask.getText());
         ESPSFlashTool.deviceConfig.setGatewayIp(jTextFieldGatewayIpAddress.getText());
