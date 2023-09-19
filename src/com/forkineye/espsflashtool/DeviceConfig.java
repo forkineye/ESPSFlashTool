@@ -454,6 +454,22 @@ class DeviceConfig
         return response;
     }
 
+    public void setDHCP(boolean value)
+    {
+        SetJsonValueByKey("dhcp", value);
+    }
+
+    public boolean getDHCP()
+    {
+        boolean response = false;
+        Object value = GetJsonValueByKey("dhcp");
+        if (null != value)
+        {
+            response = Boolean.valueOf(value.toString());
+        }
+        return response;
+    }
+
     public void setIP(String value)
     {
         SetJsonValueByKey("ip", value);
